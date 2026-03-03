@@ -59,6 +59,42 @@ curl -sSL https://install.python-poetry.org | python3 -
 poetry install
 ```
 
+### 安装 AI 引擎 CLI 工具
+
+Ralph Skill 通过 CLI 工具调用 AI 引擎，需要先安装相应的工具：
+
+#### Qwen Code CLI
+
+```bash
+# 使用 pip 安装
+pip install qwen-code
+
+# 或使用 pipx 安装（推荐，避免依赖冲突）
+pipx install qwen-code
+
+# 验证安装
+qwen-code --version
+```
+
+#### Aider CLI
+
+```bash
+# 使用 pip 安装
+pip install aider-chat
+
+# 或使用 pipx 安装（推荐）
+pipx install aider-chat
+
+# 验证安装
+aider --version
+```
+
+#### Claude CLI（可选）
+
+如果使用 Claude，请参考 Anthropic 官方文档安装 CLI 工具。
+
+**注意**：只需安装你实际使用的 AI 引擎的 CLI 工具。例如，如果只使用 Qwen Code，只需安装 `qwen-code`。
+
 ### 运行测试
 
 ```bash

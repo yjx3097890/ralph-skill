@@ -351,25 +351,77 @@ class HookSystem:
 
 #### 6. AI Engine Adapter
 
-**职责**: 多 AI 引擎适配，统一接口封装，引擎切换。
+**职责**: 多 AI 引擎适配，通过 CLI 工具调用，统一接口封装，引擎切换。
+
+**架构设计**: 所有 AI 引擎通过 subprocess 调用 CLI 工具，而不是直接调用 API。这样可以：
+- 利用官方 CLI 工具的完整功能
+- 避免重复实现 API 调用逻辑
+- 更好地处理流式输出和交互式会话
+- 简化认证和配置管理
+
+**CLI 调用架构**:
+```mermaid
+graph TB
+    subgraph "AI Engine Adapter Layer"
+        AEA[AI Engine Adapter]
+        QA[Qwen Code Adapter]
+        AA[Aider Adapter]
+        CA[Claude Adapter]
+    end
+    
+    subgraph "CLI Process Manager"
+        PM[Process Manager]
+        IO[Input/Output Handler]
+        ER[Error Handler]
+    end
+    
+    subgraph "CLI Tools"
+        QC[qwen-code CLI]
+        AD[aider CLI]
+        CL[claude CLI]
+    end
+    
+    AEA --> QA
+    AEA --> AA
+    AEA --> CA
+    
+    QA --> PM
+    AA --> PM
+    CA --> PM
+    
+    PM --> IO
+    PM --> ER
+    
+    IO --> QC
+    IO --> AD
+    IO --> CL
+```
 
 **适配器模式**:
 ```python
 class AIEngineAdapter:
-    def __init__(self, engine_type: EngineType):
-        self.engine = self._create_engine(engine_type)
+    def __init__(self, engine_type: EngineType, cli_config: CLIConfig):
+        self.engine_type = engine_type
+        self.cli_config = cli_config
+        self.process_manager = ProcessManager()
     
     def generate_code(self, prompt: str, context: str) -> CodeResult
     def refactor_code(self, code: str, requirements: str) -> CodeResult
     def fix_errors(self, code: str, errors: List[str]) -> CodeResult
     def switch_engine(self, engine_type: EngineType) -> bool
+    
+class ProcessManager:
+    def start_cli_process(self, command: List[str], env: Dict[str, str]) -> subprocess.Popen
+    def send_input(self, process: subprocess.Popen, input_text: str) -> None
+    def read_output(self, process: subprocess.Popen, timeout: int) -> str
+    def terminate_process(self, process: subprocess.Popen) -> None
 ```
 
 **支持的引擎**:
-- **Qwen Code**: 代码生成和修改
-- **Aider**: 代码重构和优化
-- **Claude**: 通用代码任务
-- **GPT-4**: 复杂逻辑实现
+- **Qwen Code**: 使用 https://github.com/QwenLM/qwen-code CLI 工具
+- **Aider**: 使用 aider CLI 工具进行代码重构和优化
+- **Claude**: 使用 Claude CLI 工具（如果可用）
+- **GPT-4**: 使用 OpenAI CLI 工具或自定义包装器
 
 #### 7. Safety Sandbox
 

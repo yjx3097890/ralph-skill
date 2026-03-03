@@ -382,3 +382,13 @@ class ErrorPriority(str, Enum):
     ERROR = "error"  # 错误 - 高优先级
     WARNING = "warning"  # 警告 - 中优先级
     INFO = "info"  # 信息 - 低优先级
+
+
+class ProcessStatus(str, Enum):
+    """进程状态枚举"""
+    RUNNING = "running"  # 运行中
+    COMPLETED = "completed"  # 已完成
+    FAILED = "failed"  # 失败
+    TIMEOUT = "timeout"  # 超时
+    TERMINATED = "terminated"  # 已终止
+

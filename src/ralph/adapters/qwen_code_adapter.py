@@ -1,7 +1,7 @@
 """
 Qwen Code 引擎适配器
 
-Qwen Code 引擎的具体实现，专注于代码生成和修改任务。
+Qwen Code 引擎的具体实现，通过 qwen-code CLI 工具进行代码生成和修改任务。
 
 ## 功能特点
 - 代码生成：根据自然语言描述生成代码
@@ -9,11 +9,29 @@ Qwen Code 引擎的具体实现，专注于代码生成和修改任务。
 - 错误修复：分析错误信息并提供修复方案
 - 多语言支持：支持主流编程语言
 
+## CLI 工具
+使用 https://github.com/QwenLM/qwen-code 提供的 CLI 工具
+
+## 安装
+```bash
+# 使用 pip 安装
+pip install qwen-code
+
+# 或使用 pipx 安装（推荐）
+pipx install qwen-code
+```
+
+## 配置
+需要设置环境变量：
+```bash
+export QWEN_API_KEY="your-api-key"
+```
+
 ## 使用示例
 ```python
 config = EngineConfig(
     engine_type=EngineType.QWEN_CODE,
-    api_key="your-api-key",
+    cli_path="qwen-code",  # CLI 工具路径
     model_name="qwen-coder-plus"
 )
 
@@ -27,9 +45,13 @@ result = adapter.generate_code(
 ```
 """
 
+import json
+import os
+import re
 from typing import List, Optional
 
 from ralph.adapters.ai_engine import AIEngineAdapter, CodeResult, EngineConfig
+from ralph.managers.cli_process_manager import CLIProcessManager
 from ralph.models.enums import ErrorCategory
 
 
@@ -44,27 +66,117 @@ class QwenCodeAdapter(AIEngineAdapter):
             config: 引擎配置
         """
         super().__init__(config)
-        self.client = None  # TODO: 初始化 Qwen Code 客户端
+        self.process_manager = CLIProcessManager()
+        self.cli_path = config.extra_params.get("cli_path", "qwen-code")
     
     def initialize(self) -> bool:
         """
         初始化 Qwen Code 引擎
         
+        检查 CLI 工具是否可用，验证 API 密钥配置
+        
         Returns:
             bool: 初始化是否成功
         """
         try:
-            # TODO: 实现 Qwen Code API 客户端初始化
-            # self.client = QwenCodeClient(
-            #     api_key=self.config.api_key,
-            #     endpoint=self.config.api_endpoint
-            # )
-            self.status.is_available = True
-            return True
+            # 检查 CLI 工具是否安装
+            import shutil
+            if not shutil.which(self.cli_path):
+                self.status.is_available = False
+                self.status.last_error = f"qwen-code CLI 工具未找到，请先安装: pip install qwen-code"
+                return False
+            
+            # 检查 API 密钥
+            if not self.config.api_key and not os.getenv("QWEN_API_KEY"):
+                self.status.is_available = False
+                self.status.last_error = "QWEN_API_KEY 环境变量未设置"
+                return False
+            
+            # 测试 CLI 工具
+            process = self.process_manager.start_process(
+                command=[self.cli_path, "--version"],
+                env=self._build_env()
+            )
+            
+            exit_code = self.process_manager.wait_for_completion(process, timeout=10)
+            
+            if exit_code == 0:
+                self.status.is_available = True
+                return True
+            else:
+                self.status.is_available = False
+                self.status.last_error = "qwen-code CLI 工具测试失败"
+                return False
+                
         except Exception as e:
             self.status.is_available = False
             self.status.last_error = str(e)
             return False
+    
+    def _build_env(self) -> dict:
+        """
+        构建环境变量
+        
+        Returns:
+            dict: 环境变量字典
+        """
+        env = {}
+        
+        # 设置 API 密钥
+        if self.config.api_key:
+            env["QWEN_API_KEY"] = self.config.api_key
+        
+        # 设置 API 端点（如果配置了）
+        if self.config.api_endpoint:
+            env["QWEN_API_BASE"] = self.config.api_endpoint
+        
+        return env
+    
+    def _build_command(
+        self,
+        prompt: str,
+        context: str = "",
+        language: Optional[str] = None,
+        **kwargs
+    ) -> List[str]:
+        """
+        构建 CLI 命令
+        
+        Args:
+            prompt: 代码生成提示
+            context: 上下文信息
+            language: 目标编程语言
+            **kwargs: 其他参数
+            
+        Returns:
+            List[str]: 命令列表
+        """
+        command = [self.cli_path]
+        
+        # 添加模型参数
+        if self.config.model_name:
+            command.extend(["--model", self.config.model_name])
+        
+        # 添加温度参数
+        if self.config.temperature:
+            command.extend(["--temperature", str(self.config.temperature)])
+        
+        # 添加最大 token 数
+        if self.config.max_tokens:
+            command.extend(["--max-tokens", str(self.config.max_tokens)])
+        
+        # 添加语言参数
+        if language:
+            command.extend(["--language", language])
+        
+        # 添加上下文
+        if context:
+            command.extend(["--context", context])
+        
+        # 添加提示
+        command.append(prompt)
+        
+        return command
     
     def generate_code(
         self,
@@ -85,14 +197,56 @@ class QwenCodeAdapter(AIEngineAdapter):
         Returns:
             CodeResult: 代码生成结果
         """
-        # TODO: 实现 Qwen Code 代码生成逻辑
-        # 这里是占位符实现
-        return CodeResult(
-            success=True,
-            code="# TODO: 实现代码生成",
-            explanation="Qwen Code 代码生成功能待实现",
-            warnings=["这是占位符实现"]
-        )
+        try:
+            # 构建命令
+            command = self._build_command(prompt, context, language, **kwargs)
+            
+            # 启动进程
+            process = self.process_manager.start_process(
+                command=command,
+                env=self._build_env()
+            )
+            
+            # 读取输出
+            output = self.process_manager.read_output(
+                process,
+                timeout=self.config.timeout
+            )
+            
+            # 等待进程完成
+            exit_code = self.process_manager.wait_for_completion(process)
+            
+            if exit_code == 0:
+                # 解析输出
+                code, explanation = self._parse_output(output)
+                
+                return CodeResult(
+                    success=True,
+                    code=code,
+                    explanation=explanation,
+                    warnings=[]
+                )
+            else:
+                # 读取错误输出
+                error_output = self.process_manager.read_output(
+                    process,
+                    stream="stderr"
+                )
+                
+                return CodeResult(
+                    success=False,
+                    code="",
+                    explanation=f"Qwen Code 执行失败: {error_output}",
+                    warnings=[error_output]
+                )
+                
+        except Exception as e:
+            return CodeResult(
+                success=False,
+                code="",
+                explanation=f"Qwen Code 调用异常: {str(e)}",
+                warnings=[str(e)]
+            )
     
     def refactor_code(
         self,
@@ -111,13 +265,8 @@ class QwenCodeAdapter(AIEngineAdapter):
         Returns:
             CodeResult: 重构结果
         """
-        # TODO: 实现 Qwen Code 代码重构逻辑
-        return CodeResult(
-            success=True,
-            code=code,
-            explanation="Qwen Code 代码重构功能待实现",
-            warnings=["这是占位符实现"]
-        )
+        prompt = f"重构以下代码，要求：{requirements}\n\n```\n{code}\n```"
+        return self.generate_code(prompt, **kwargs)
     
     def fix_errors(
         self,
@@ -138,13 +287,33 @@ class QwenCodeAdapter(AIEngineAdapter):
         Returns:
             CodeResult: 修复结果
         """
-        # TODO: 实现 Qwen Code 错误修复逻辑
-        return CodeResult(
-            success=True,
-            code=code,
-            explanation="Qwen Code 错误修复功能待实现",
-            warnings=["这是占位符实现"]
-        )
+        errors_text = "\n".join(f"- {error}" for error in errors)
+        prompt = f"修复以下代码中的错误：\n{errors_text}\n\n```\n{code}\n```"
+        return self.generate_code(prompt, **kwargs)
+    
+    def _parse_output(self, output: str) -> tuple[str, str]:
+        """
+        解析 CLI 输出
+        
+        Args:
+            output: CLI 输出文本
+            
+        Returns:
+            tuple[str, str]: (代码, 解释)
+        """
+        # 尝试提取代码块
+        code_blocks = re.findall(r'```(?:\w+)?\n(.*?)\n```', output, re.DOTALL)
+        
+        if code_blocks:
+            code = code_blocks[0].strip()
+            # 移除代码块后的文本作为解释
+            explanation = re.sub(r'```(?:\w+)?\n.*?\n```', '', output, flags=re.DOTALL).strip()
+        else:
+            # 没有代码块，整个输出作为代码
+            code = output.strip()
+            explanation = "Qwen Code 生成的代码"
+        
+        return code, explanation
     
     def is_available(self) -> bool:
         """
@@ -154,3 +323,4 @@ class QwenCodeAdapter(AIEngineAdapter):
             bool: 引擎是否可用
         """
         return self.status.is_available
+
