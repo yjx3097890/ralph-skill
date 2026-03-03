@@ -112,11 +112,28 @@ hooks:
 # 注意：只需保留你实际使用的引擎配置
 # 未配置的引擎不会被加载，也不会报错
 # 建议删除或注释掉不使用的引擎，保持配置简洁
+#
+# 每个引擎支持以下参数：
+# - type: 引擎类型（qwen_code, aider, claude, gpt4）
+# - cli_path: CLI 工具路径（默认从 PATH 查找）
+# - model: 模型名称
+# - timeout: 命令执行超时时间（秒）
 
 ai_engines:
-  # Claude 配置（如不使用可删除此节）
-  # claude:
-  #   type: "claude"
+  # Qwen Code 配置（如不使用可删除此节）
+  qwen_code:
+    type: "qwen_code"
+    cli_path: "qwen"  # CLI 工具路径，默认从 PATH 查找
+    model: "qwen3-coder-plus"  # 模型名称
+    timeout: 60  # 命令执行超时时间（秒）
+  
+  # Aider 配置（如不使用可删除此节）
+  # aider:
+  #   type: "aider"
+  #   cli_path: "aider"  # CLI 工具路径，默认从 PATH 查找
+  #   model: "gpt-4"  # 模型名称（支持 gpt-4, claude-3-5-sonnet 等）
+  #   timeout: 60  # 命令执行超时时间（秒）
+  
   # Claude 配置（如不使用可删除此节）
   # claude:
   #   type: "claude"
@@ -130,28 +147,5 @@ ai_engines:
   #   cli_path: "openai"  # CLI 工具路径，默认从 PATH 查找
   #   model: "gpt-4-turbo-preview"  # 模型名称
   #   timeout: 60  # 命令执行超时时间（秒）
-  
-  # Qwen Code 配置（如不使用可删除此节）
-  qwen_code:
-    type: "qwen_code"
-    cli_path: "qwen-code"  # CLI 工具路径，默认从 PATH 查找
-    model: "qwen-coder-plus"  # 模型名称
-    timeout: 60  # 命令执行超时时间（秒）
-  
-  # Aider 配置（如不使用可删除此节）
-  # aider:
-  #   type: "aider"
-  #   cli_path: "aider"  # CLI 工具路径，默认从 PATH 查找
-  #   model: "gpt-4"  # 模型名称（支持 gpt-4, claude-3-5-sonnet 等）
-  #   timeout: 60  # 命令执行超时时间（秒）
 
-# 环境变量说明：
-# 在使用前，请设置以下环境变量（只需设置你使用的引擎）：
-# export QWEN_API_KEY="your-qwen-api-key"
-# export OPENAI_API_KEY="your-openai-api-key"
-# export ANTHROPIC_API_KEY="your-anthropic-api-key"
-#
-# 或者在 .env 文件中设置：
-# QWEN_API_KEY=your-qwen-api-key
-# OPENAI_API_KEY=your-openai-api-key
-# ANTHROPIC_API_KEY=your-anthropic-api-key
+

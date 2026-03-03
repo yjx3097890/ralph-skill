@@ -65,12 +65,12 @@ class CodeResult:
 class EngineConfig:
     """AI 引擎配置"""
     engine_type: EngineType
-    api_key: Optional[str] = None
-    api_endpoint: Optional[str] = None
     model_name: Optional[str] = None
-    temperature: float = 0.7
-    max_tokens: int = 4096
     timeout: int = 60
+    api_key: Optional[str] = None  # 保留用于向后兼容，但不在配置文件中使用
+    api_endpoint: Optional[str] = None  # 保留用于向后兼容，但不在配置文件中使用
+    temperature: float = 0.7  # 保留用于向后兼容，但不在配置文件中使用
+    max_tokens: int = 4096  # 保留用于向后兼容，但不在配置文件中使用
     retry_count: int = 3
     extra_params: Dict[str, Any] = field(default_factory=dict)
 

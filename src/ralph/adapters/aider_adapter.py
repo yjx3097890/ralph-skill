@@ -132,13 +132,14 @@ class AiderAdapter(AIEngineAdapter):
         env = {}
         
         # 设置 API 密钥
-        if self.config.api_key:
+        if self.config.api_key and self.config.model_name:
             # 根据模型类型设置相应的环境变量
-            if "gpt" in self.config.model_name.lower():
+            model_lower = self.config.model_name.lower()
+            if "gpt" in model_lower:
                 env["OPENAI_API_KEY"] = self.config.api_key
-            elif "claude" in self.config.model_name.lower():
+            elif "claude" in model_lower:
                 env["ANTHROPIC_API_KEY"] = self.config.api_key
-            elif "gemini" in self.config.model_name.lower():
+            elif "gemini" in model_lower:
                 env["GEMINI_API_KEY"] = self.config.api_key
         
         return env

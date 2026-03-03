@@ -509,14 +509,16 @@ class ConfigParser:
         
     def _parse_engine_config(self, data: Dict[str, Any]) -> EngineConfig:
         """解析 AI 引擎配置"""
+        # 提取 CLI 相关参数到 extra_params
+        extra_params = {}
+        if "cli_path" in data:
+            extra_params["cli_path"] = data["cli_path"]
+        
         return EngineConfig(
-            type=EngineType(data.get("type", "qwen_code")),
-            api_key=data.get("api_key"),
-            api_base=data.get("api_base"),
-            model=data.get("model"),
-            temperature=data.get("temperature", 0.7),
-            max_tokens=data.get("max_tokens", 4096),
-            timeout=data.get("timeout", 60)
+            engine_type=EngineType(data.get("type", "qwen_code")),
+            model_name=data.get("model"),  # 配置文件中的 model 映射到 model_name
+            timeout=data.get("timeout", 60),
+            extra_params=extra_params
         )
         
     def _config_to_dict(self, config: Configuration) -> Dict[str, Any]:
@@ -623,17 +625,16 @@ class ConfigParser:
             
         # AI 引擎配置
         if config.ai_engines:
-            result["ai_engines"] = {
-                name: {
-                    "type": engine.type.value,
-                    "api_key": engine.api_key,
-                    "api_base": engine.api_base,
-                    "model": engine.model,
-                    "temperature": engine.temperature,
-                    "max_tokens": engine.max_tokens,
+            result["ai_engines"] = {}
+            for name, engine in config.ai_engines.items():
+                engine_dict = {
+                    "type": engine.engine_type.value,
+                    "model": engine.model_name,
                     "timeout": engine.timeout
                 }
-                for name, engine in config.ai_engines.items()
-            }
+                # 添加 extra_params 中的参数
+                if "cli_path" in engine.extra_params:
+                    engine_dict["cli_path"] = engine.extra_params["cli_path"]
+                result["ai_engines"][name] = engine_dict
             
         return result

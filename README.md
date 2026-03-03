@@ -98,32 +98,69 @@ source ~/.bashrc  # 或 source ~/.zshrc
 **安装方法**：
 
 ```bash
-# 方法 1: 使用 pipx 安装（推荐）
-pipx install qwen-code
+# 方法 1: 快速安装（推荐）
+# Linux / macOS
+curl -fsSL https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.sh | bash
 
-# 方法 2: 使用 pip 安装
-pip install qwen-code
+# Windows (以管理员身份运行 CMD)
+curl -fsSL -o %TEMP%\install-qwen.bat https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.bat && %TEMP%\install-qwen.bat
 
+# 方法 2: 使用 npm 安装（需要 Node.js 20+）
+npm install -g @qwen-code/qwen-code@latest
+
+# 方法 3: 使用 Homebrew 安装（macOS/Linux）
+brew install qwen-code
+
+# 安装后重启终端以使环境变量生效
 # 验证安装
-qwen-code --version
+qwen --version
 ```
 
-**配置 API 密钥**：
+**配置认证**：
 
-```bash
-# 设置环境变量
-export QWEN_API_KEY="your-qwen-api-key"
+Qwen Code 支持两种认证方式：
 
-# 或添加到 shell 配置文件（永久生效）
-echo 'export QWEN_API_KEY="your-qwen-api-key"' >> ~/.bashrc
-source ~/.bashrc
+1. **Qwen OAuth（推荐，免费）**：
+   ```bash
+   # 启动 qwen 后运行
+   qwen
+   # 在会话中输入
+   /auth
+   # 选择 Qwen OAuth，在浏览器中完成登录
+   ```
 
-# 或在项目目录创建 .env 文件
-echo "QWEN_API_KEY=your-qwen-api-key" >> .env
-```
+2. **API-KEY 方式**（更灵活，支持多种提供商）：
+   
+   编辑 `~/.qwen/settings.json`：
+   ```json
+   {
+     "modelProviders": {
+       "openai": [
+         {
+           "id": "qwen3-coder-plus",
+           "name": "qwen3-coder-plus",
+           "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+           "description": "Qwen3-Coder via Dashscope",
+           "envKey": "DASHSCOPE_API_KEY"
+         }
+       ]
+     },
+     "env": {
+       "DASHSCOPE_API_KEY": "sk-xxxxxxxxxxxxx"
+     },
+     "security": {
+       "auth": {
+         "selectedType": "openai"
+       }
+     },
+     "model": {
+       "name": "qwen3-coder-plus"
+     }
+   }
+   ```
 
 **获取 API 密钥**：
-1. 访问 [阿里云百炼平台](https://bailian.console.aliyun.com/)
+1. 访问 [阿里云百炼平台](https://bailian.console.aliyun.com/) 或 [DashScope](https://dashscope.aliyuncs.com/)
 2. 注册/登录账号
 3. 进入 API-KEY 管理页面
 4. 创建新的 API 密钥
@@ -131,11 +168,13 @@ echo "QWEN_API_KEY=your-qwen-api-key" >> .env
 **测试 CLI 工具**：
 
 ```bash
-# 测试代码生成
-qwen-code "实现一个快速排序算法" --language python
+# 启动交互式会话
+qwen
 
-# 查看帮助
-qwen-code --help
+# 在会话中尝试：
+# What does this project do?
+# Explain the codebase structure.
+# Help me refactor this function.
 ```
 
 ---
