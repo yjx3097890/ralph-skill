@@ -99,21 +99,81 @@ class RalphEngineCore:
                 task.id, TaskStatus.IN_PROGRESS
             )
 
-            # 执行任务（简化实现）
-            # TODO: 完整实现将在后续迭代中添加
+            # 执行任务的核心循环
+            retry_count = 0
+            max_retries = task_config.max_retries
+            success = False
+            error_message = ""
+            files_changed = []
+            
+            while retry_count <= max_retries and not success:
+                try:
+                    logger.info(f"执行任务 {task.name}，尝试 {retry_count + 1}/{max_retries + 1}")
+                    
+                    # 1. 调用 AI 引擎生成代码
+                    code_result = self._execute_with_ai(task_config)
+                    files_changed = code_result.files_changed or []
+                    
+                    # 2. 运行测试验证
+                    test_passed = self._run_tests(task_config)
+                    
+                    if test_passed:
+                        success = True
+                        logger.info(f"任务 {task.name} 执行成功")
+                    else:
+                        error_message = "测试未通过"
+                        retry_count += 1
+                        if retry_count <= max_retries:
+                            logger.warning(f"测试失败，准备重试 ({retry_count}/{max_retries})")
+                            # 回滚代码
+                            self.git_manager.rollback_to_branch(wip_branch)
+                        
+                except Exception as e:
+                    error_message = str(e)
+                    retry_count += 1
+                    logger.error(f"任务执行出错: {e}")
+                    if retry_count <= max_retries:
+                        logger.warning(f"准备重试 ({retry_count}/{max_retries})")
+                        # 回滚代码
+                        try:
+                            self.git_manager.rollback_to_branch(wip_branch)
+                        except Exception:
+                            pass
 
-            # 更新状态为 COMPLETED
-            self.task_manager.update_task_status(
-                task.id, TaskStatus.COMPLETED
-            )
+            if success:
+                # 提交代码
+                commit_hash = self.git_manager.commit_changes(
+                    f"feat: {task.name}",
+                    files=files_changed
+                )
+                
+                # 更新状态为 COMPLETED
+                self.task_manager.update_task_status(
+                    task.id, TaskStatus.COMPLETED
+                )
 
-            execution_time = time.time() - start_time
-            return TaskResult(
-                task_id=task.id,
-                success=True,
-                message="任务执行成功",
-                execution_time=execution_time,
-            )
+                execution_time = time.time() - start_time
+                return TaskResult(
+                    task_id=task.id,
+                    success=True,
+                    message="任务执行成功",
+                    execution_time=execution_time,
+                    files_changed=files_changed,
+                    commit_hash=commit_hash,
+                )
+            else:
+                # 任务失败
+                self.task_manager.update_task_status(
+                    task.id, TaskStatus.FAILED
+                )
+                
+                execution_time = time.time() - start_time
+                return TaskResult(
+                    task_id=task.id,
+                    success=False,
+                    message=f"任务失败: {error_message}",
+                    execution_time=execution_time,
+                )
 
         except Exception as e:
             logger.error(f"任务执行失败: {e}")
@@ -126,4 +186,136 @@ class RalphEngineCore:
                 message=str(e),
                 execution_time=time.time() - start_time,
             )
+    
+    def _execute_with_ai(self, task_config: TaskConfig) -> CodeResult:
+        """
+        使用 AI 引擎执行任务
+        
+        参数:
+            task_config: 任务配置
+        
+        返回:
+            CodeResult: 代码生成结果
+        """
+        # 获取任务描述
+        description = task_config.config.get("description", task_config.name)
+        
+        # 构建上下文
+        context = self.context_manager.build_context(
+            project_root=str(self.project_root),
+            task_description=description,
+        )
+        
+        # 调用 AI 引擎
+        logger.info(f"调用 AI 引擎生成代码...")
+        result = self.ai_engine_manager.generate_code(
+            prompt=description,
+            context=context.content,
+            project_root=str(self.project_root),
+        )
+        
+        logger.info(f"代码生成完成，修改了 {len(result.files_changed or [])} 个文件")
+        return result
+    
+    def _run_tests(self, task_config: TaskConfig) -> bool:
+        """
+        运行测试验证代码
+        
+        参数:
+            task_config: 任务配置
+        
+        返回:
+            bool: 测试是否通过
+        """
+        logger.info("运行测试验证...")
+        
+        try:
+            # 在沙箱中运行测试
+            test_command = self._get_test_command()
+            if not test_command:
+                logger.warning("未配置测试命令，跳过测试")
+                return True
+            
+            result = self.sandbox.execute_command(
+                test_command,
+                timeout=task_config.timeout,
+            )
+            
+            if result.exit_code == 0:
+                logger.info("✅ 测试通过")
+                return True
+            else:
+                logger.warning(f"❌ 测试失败: {result.stderr}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"运行测试时出错: {e}")
+            return False
+    
+    def _get_test_command(self) -> Optional[str]:
+        """获取测试命令"""
+        # 根据项目类型返回测试命令
+        if self.config.project.backend:
+            language = self.config.project.backend.language
+            if language == "go":
+                return "go test ./..."
+            elif language == "python":
+                return "pytest"
+            elif language == "node":
+                return "npm test"
+        
+        if self.config.project.frontend:
+            return "npm test"
+        
+        return None
+    
+    def run_all_tasks(self) -> Dict[str, TaskResult]:
+        """
+        执行所有任务
+        
+        按依赖顺序执行配置中的所有任务。
+        
+        返回:
+            Dict[str, TaskResult]: 任务 ID 到结果的映射
+        """
+        logger.info(f"开始执行所有任务，共 {len(self.config.tasks)} 个")
+        
+        results = {}
+        completed_tasks = set()
+        
+        # 按依赖顺序执行任务
+        while len(completed_tasks) < len(self.config.tasks):
+            # 找到可以执行的任务（依赖都已完成）
+            ready_tasks = [
+                task for task in self.config.tasks
+                if task.id not in completed_tasks
+                and all(dep in completed_tasks for dep in task.depends_on)
+            ]
+            
+            if not ready_tasks:
+                # 没有可执行的任务，可能存在循环依赖
+                remaining = [t.id for t in self.config.tasks if t.id not in completed_tasks]
+                logger.error(f"无法继续执行，剩余任务: {remaining}")
+                break
+            
+            # 执行就绪的任务
+            for task_config in ready_tasks:
+                logger.info(f"\n{'='*60}")
+                logger.info(f"执行任务: {task_config.name} ({task_config.id})")
+                logger.info(f"{'='*60}\n")
+                
+                result = self.execute_task(task_config)
+                results[task_config.id] = result
+                
+                if result.success:
+                    completed_tasks.add(task_config.id)
+                    logger.info(f"✅ 任务 {task_config.name} 完成")
+                else:
+                    logger.error(f"❌ 任务 {task_config.name} 失败: {result.message}")
+                    # 任务失败，停止执行
+                    logger.error("任务失败，停止执行后续任务")
+                    return results
+        
+        logger.info(f"\n所有任务执行完成，成功 {len(completed_tasks)}/{len(self.config.tasks)}")
+        return results
 
