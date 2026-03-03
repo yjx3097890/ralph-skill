@@ -1,0 +1,133 @@
+# 简单 Todo 应用配置示例
+# 这是一个最小化的配置，适合快速开始
+
+# 项目配置
+project:
+  name: "simple-todo"
+  type: "fullstack"
+  
+  # 前端：Vue3 + Vite
+  frontend:
+    framework: "vue3"
+    test_runner: "vitest"
+    build_tool: "vite"
+    package_manager: "npm"
+  
+  # 后端：Go + Gin
+  backend:
+    language: "go"
+    framework: "gin"
+    build_system: "go"
+    dependency_manager: "go_mod"
+    test_runner: "testing"
+
+# 任务列表
+tasks:
+  # 任务 1：初始化项目
+  - id: "init"
+    name: "初始化项目结构"
+    type: "feature"
+    depends_on: []
+    ai_engine: "qwen_code"
+    max_retries: 3
+    timeout: 1800
+    config:
+      description: |
+        创建基础项目结构：
+        1. 前端目录（frontend/）
+           - 使用 Vite 创建 Vue3 项目
+           - 配置 Vitest
+        2. 后端目录（backend/）
+           - 初始化 Go 模块
+           - 创建 main.go
+        3. 配置文件
+           - .gitignore
+           - README.md
+  
+  # 任务 2：实现后端 API
+  - id: "backend"
+    name: "实现 Todo API"
+    type: "feature"
+    depends_on: ["init"]
+    ai_engine: "qwen_code"
+    max_retries: 3
+    timeout: 1800
+    config:
+      description: |
+        实现简单的 Todo RESTful API：
+        
+        数据模型：
+        - ID (int)
+        - Title (string)
+        - Completed (bool)
+        - CreatedAt (time)
+        
+        API 端点：
+        - GET /api/todos - 获取所有 todos
+        - POST /api/todos - 创建 todo
+        - PUT /api/todos/:id - 更新 todo
+        - DELETE /api/todos/:id - 删除 todo
+        
+        要求：
+        - 使用内存存储（不需要数据库）
+        - 添加 CORS 支持
+        - 包含基础的单元测试
+        - 添加错误处理
+  
+  # 任务 3：实现前端界面
+  - id: "frontend"
+    name: "实现 Todo 界面"
+    type: "feature"
+    depends_on: ["backend"]
+    ai_engine: "qwen_code"
+    max_retries: 3
+    timeout: 1800
+    config:
+      description: |
+        实现简单的 Todo 界面：
+        
+        组件：
+        1. TodoList.vue - 主组件
+           - 显示 todo 列表
+           - 添加新 todo 的输入框
+           - 标记完成/未完成
+           - 删除 todo
+        
+        2. TodoItem.vue - 单个 todo 项
+           - 显示标题
+           - 完成状态复选框
+           - 删除按钮
+        
+        功能：
+        - 使用 Composition API
+        - 调用后端 API
+        - 简单的样式（不需要 UI 库）
+        - 添加基础的单元测试
+
+# 安全配置
+safety:
+  enable_sandbox: true
+  max_context_tokens: 100000
+  allowed_commands:
+    - "git"
+    - "npm"
+    - "go"
+
+# Git 配置
+git:
+  auto_commit: true
+  commit_message_prefix: "feat"
+  enable_rollback: true
+
+# 系统设置
+settings:
+  log_level: "info"
+  enable_hooks: true
+
+# AI 引擎配置
+ai_engines:
+  qwen_code:
+    type: "qwen_code"
+    cli_path: "qwen"
+    model: "qwen3-coder-plus"
+    timeout: 60
