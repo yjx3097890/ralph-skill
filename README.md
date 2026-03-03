@@ -108,12 +108,12 @@ Kiro 是一个 AI 驱动的 IDE，支持通过 Skills 扩展能力。
 # 用户级别（推荐）
 mkdir -p ~/.kiro/skills/
 cd ~/.kiro/skills/
-git clone https://github.com/your-org/ralph-skill.git
+git clone git@github.com:yjx3097890/ralph-skill.git
 
 # 或工作区级别
 mkdir -p .kiro/skills/
 cd .kiro/skills/
-git clone https://github.com/your-org/ralph-skill.git
+git clone git@github.com:yjx3097890/ralph-skill.git
 ```
 
 #### 2. 配置 Skill
@@ -331,7 +331,7 @@ A: Ralph Skill 使用 Git 进行版本控制，所有修改都会自动提交。
 # 1. 安装 Skill
 mkdir -p ~/.kiro/skills/
 cd ~/.kiro/skills/
-git clone https://github.com/your-org/ralph-skill.git
+git clone git@github.com:yjx3097890/ralph-skill.git
 cd ralph-skill
 poetry install
 
