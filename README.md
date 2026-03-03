@@ -61,67 +61,243 @@ poetry install
 
 ### 安装 AI 引擎 CLI 工具
 
-Ralph Skill 通过 CLI 工具调用 AI 引擎，需要先安装相应的工具：
+Ralph Skill 通过 CLI 工具调用 AI 引擎，需要先安装相应的工具。
 
-#### Qwen Code CLI
+#### 为什么使用 CLI 工具？
+
+- ✅ 利用官方 CLI 工具的完整功能和最新特性
+- ✅ 避免重复实现 API 调用逻辑
+- ✅ 更好地处理流式输出和交互式会话
+- ✅ 简化认证和配置管理
+- ✅ 更容易调试和排查问题
+
+#### 推荐使用 pipx 安装
+
+`pipx` 可以在隔离的环境中安装 Python CLI 工具，避免依赖冲突：
 
 ```bash
-# 使用 pip 安装
-pip install qwen-code
+# 安装 pipx（如果尚未安装）
+# macOS
+brew install pipx
+pipx ensurepath
 
-# 或使用 pipx 安装（推荐，避免依赖冲突）
+# Linux
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+
+# 重新加载 shell 配置
+source ~/.bashrc  # 或 source ~/.zshrc
+```
+
+---
+
+#### 1. Qwen Code CLI
+
+**官方仓库**: https://github.com/QwenLM/qwen-code
+
+**安装方法**：
+
+```bash
+# 方法 1: 使用 pipx 安装（推荐）
 pipx install qwen-code
+
+# 方法 2: 使用 pip 安装
+pip install qwen-code
 
 # 验证安装
 qwen-code --version
 ```
 
 **配置 API 密钥**：
+
 ```bash
 # 设置环境变量
 export QWEN_API_KEY="your-qwen-api-key"
 
-# 或在 .env 文件中添加
+# 或添加到 shell 配置文件（永久生效）
+echo 'export QWEN_API_KEY="your-qwen-api-key"' >> ~/.bashrc
+source ~/.bashrc
+
+# 或在项目目录创建 .env 文件
 echo "QWEN_API_KEY=your-qwen-api-key" >> .env
 ```
 
-#### Aider CLI
+**获取 API 密钥**：
+1. 访问 [阿里云百炼平台](https://bailian.console.aliyun.com/)
+2. 注册/登录账号
+3. 进入 API-KEY 管理页面
+4. 创建新的 API 密钥
+
+**测试 CLI 工具**：
 
 ```bash
-# 使用 pip 安装
-pip install aider-chat
+# 测试代码生成
+qwen-code "实现一个快速排序算法" --language python
 
-# 或使用 pipx 安装（推荐）
+# 查看帮助
+qwen-code --help
+```
+
+---
+
+#### 2. Aider CLI
+
+**官方仓库**: https://github.com/paul-gauthier/aider
+
+**安装方法**：
+
+```bash
+# 方法 1: 使用 pipx 安装（推荐）
 pipx install aider-chat
+
+# 方法 2: 使用 pip 安装
+pip install aider-chat
 
 # 验证安装
 aider --version
 ```
 
 **配置 API 密钥**（根据使用的模型）：
+
 ```bash
 # 如果使用 GPT-4
 export OPENAI_API_KEY="your-openai-api-key"
+echo 'export OPENAI_API_KEY="your-openai-api-key"' >> ~/.bashrc
 
 # 如果使用 Claude
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
+echo 'export ANTHROPIC_API_KEY="your-anthropic-api-key"' >> ~/.bashrc
 
-# 或在 .env 文件中添加
-echo "OPENAI_API_KEY=your-openai-api-key" >> .env
+# 如果使用 Gemini
+export GEMINI_API_KEY="your-gemini-api-key"
+echo 'export GEMINI_API_KEY="your-gemini-api-key"' >> ~/.bashrc
+
+# 重新加载配置
+source ~/.bashrc
 ```
 
-#### Claude CLI（可选）
+**获取 API 密钥**：
+- **OpenAI**: https://platform.openai.com/api-keys
+- **Anthropic**: https://console.anthropic.com/settings/keys
+- **Google Gemini**: https://makersuite.google.com/app/apikey
 
-如果使用 Claude，请参考 Anthropic 官方文档安装 CLI 工具。
+**测试 CLI 工具**：
 
-**配置 API 密钥**：
+```bash
+# 测试 Aider（会在当前目录创建临时文件）
+mkdir -p /tmp/aider-test && cd /tmp/aider-test
+echo "print('hello')" > test.py
+aider --message "添加一个函数计算两数之和" test.py
+
+# 查看帮助
+aider --help
+```
+
+---
+
+#### 3. Claude CLI（可选）
+
+**官方文档**: https://docs.anthropic.com/claude/docs
+
+目前 Anthropic 没有提供官方的独立 CLI 工具，但可以通过以下方式使用：
+
+**方法 1: 使用 Aider（推荐）**
+
+Aider 支持 Claude 模型，只需配置 API 密钥：
+
 ```bash
 export ANTHROPIC_API_KEY="your-anthropic-api-key"
+aider --model claude-3-5-sonnet-20241022
+```
+
+**方法 2: 使用第三方 CLI 工具**
+
+```bash
+# 安装 anthropic-cli（社区工具）
+pipx install anthropic-cli
+
+# 配置 API 密钥
+export ANTHROPIC_API_KEY="your-anthropic-api-key"
+
+# 使用
+anthropic "实现一个快速排序算法"
+```
+
+---
+
+#### 4. OpenAI CLI（可选）
+
+**官方文档**: https://platform.openai.com/docs/api-reference
+
+**安装方法**：
+
+```bash
+# 安装 OpenAI CLI
+pipx install openai
+
+# 配置 API 密钥
+export OPENAI_API_KEY="your-openai-api-key"
+
+# 测试
+openai api chat.completions.create -m gpt-4 -g user "Hello"
+```
+
+---
+
+#### 常见问题
+
+**Q: 为什么推荐使用 pipx？**
+
+A: `pipx` 会为每个工具创建独立的虚拟环境，避免依赖冲突。例如：
+- Qwen Code 可能依赖 `requests==2.28.0`
+- Aider 可能依赖 `requests==2.31.0`
+- 使用 `pip` 安装会导致冲突，使用 `pipx` 则不会
+
+**Q: CLI 工具安装失败怎么办？**
+
+A: 常见解决方法：
+```bash
+# 1. 更新 pip
+python3 -m pip install --upgrade pip
+
+# 2. 清理缓存
+pip cache purge
+
+# 3. 使用国内镜像（如果网络问题）
+pip install qwen-code -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 4. 检查 Python 版本（需要 Python 3.8+）
+python3 --version
+```
+
+**Q: 如何验证 API 密钥是否正确？**
+
+A: 使用 CLI 工具测试：
+```bash
+# Qwen Code
+qwen-code "print hello world" --language python
+
+# Aider
+aider --model gpt-4 --message "hello"
+
+# 如果 API 密钥错误，会显示认证失败的错误信息
+```
+
+**Q: 可以同时安装多个 CLI 工具吗？**
+
+A: 可以！使用 `pipx` 安装不会冲突：
+```bash
+pipx install qwen-code
+pipx install aider-chat
+pipx install openai
+
+# 查看已安装的工具
+pipx list
 ```
 
 **重要说明**：
 - CLI 工具通过环境变量读取 API 密钥，不需要在配置文件中设置
-- 只需安装和配置你实际使用的 AI 引擎
+- 只需安装你实际使用的 AI 引擎的 CLI 工具
 - 建议使用 `.env` 文件管理 API 密钥，避免在命令行中暴露
 
 ### 运行测试
