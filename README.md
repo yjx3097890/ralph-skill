@@ -127,26 +127,42 @@ cd ~/.kiro/skills/ralph-skill
 vim config.yaml
 ```
 
-创建 `.env` 文件设置 API 密钥：
+创建 `.env` 文件设置 API 密钥（只需配置你要使用的 AI 引擎）：
 
 ```bash
 # 创建 .env 文件
+# 注意：只需要配置你实际使用的 AI 引擎的 API 密钥
+# 例如，如果只使用 Qwen，只需设置 QWEN_API_KEY
+
 cat > .env << EOF
-CLAUDE_API_KEY=your-claude-api-key
-OPENAI_API_KEY=your-openai-api-key
+# 根据需要选择配置一个或多个
 QWEN_API_KEY=your-qwen-api-key
+# CLAUDE_API_KEY=your-claude-api-key
+# OPENAI_API_KEY=your-openai-api-key
 EOF
 ```
 
-编辑 `config.yaml` 配置 AI 引擎：
+编辑 `config.yaml` 指定使用的 AI 引擎：
 
 ```yaml
+# 在任务配置中指定使用的引擎
+tasks:
+  - id: "task-1"
+    name: "实现用户认证"
+    ai_engine: "qwen_code"  # 使用 Qwen（或 claude, gpt4, aider）
+    
+# AI 引擎配置（只需保留你使用的引擎配置）
 ai_engines:
-  claude:
-    type: "claude"
-    api_key: "${CLAUDE_API_KEY}"  # 从环境变量读取
-    model: "claude-3-5-sonnet-20241022"
+  qwen_code:
+    type: "qwen_code"
+    api_key: "${QWEN_API_KEY}"
+    model: "qwen-coder-plus"
 ```
+
+**重要说明**：
+- 你只需要配置实际使用的 AI 引擎的 API 密钥
+- 未配置的引擎不会被使用，也不会报错
+- 建议在 `config.yaml` 中删除或注释掉不使用的引擎配置，保持配置文件简洁
 
 #### 3. 在 Kiro 中激活 Skill
 
@@ -299,6 +315,31 @@ backend:
 
 ### 常见问题
 
+**Q: 只配置一个 AI 引擎可以吗？**
+
+A: 可以！你只需要配置实际使用的 AI 引擎。例如只使用 Qwen：
+
+```bash
+# .env 文件
+QWEN_API_KEY=your-qwen-api-key
+```
+
+```yaml
+# config.yaml - 只保留 qwen_code 配置
+ai_engines:
+  qwen_code:
+    type: "qwen_code"
+    api_key: "${QWEN_API_KEY}"
+    model: "qwen-coder-plus"
+
+# 任务中指定使用 qwen_code
+tasks:
+  - id: "task-1"
+    ai_engine: "qwen_code"
+```
+
+未配置的引擎不会被加载，也不会报错。
+
 **Q: 如何知道 Skill 是否安装成功？**
 
 A: 在 Kiro 中，打开命令面板（`Cmd/Ctrl + Shift + P`），输入 "List Skills"，应该能看到 ralph-skill。
@@ -347,14 +388,13 @@ git clone git@github.com:yjx3097890/ralph-skill.git
 cd ralph-skill
 poetry install
 
-# 2. 配置环境变量
+# 2. 配置环境变量（只配置你使用的 AI 引擎）
 cat > .env << EOF
-CLAUDE_API_KEY=your-claude-api-key
-OPENAI_API_KEY=your-openai-api-key
 QWEN_API_KEY=your-qwen-api-key
 EOF
 
-# 3. 编辑配置文件（可选，使用默认配置即可开始）
+# 3. 编辑配置文件（可选，默认配置已包含常用引擎）
+# 如果只使用 Qwen，建议删除其他引擎配置保持简洁
 vim config.yaml
 
 # 4. 在 Kiro 中使用
