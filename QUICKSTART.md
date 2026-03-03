@@ -30,7 +30,9 @@ git init
 
 ### 步骤 2：创建配置文件
 
-创建 `ralph-config.yaml`：
+在**你的项目目录**中创建 `ralph-config.yaml`：
+
+> **注意**：配置文件名可以是任意名称（如 `config.yaml`、`ralph.yaml` 等），但建议使用 `ralph-config.yaml` 以区别于 Skill 自身的配置文件。
 
 ```yaml
 # 项目配置
