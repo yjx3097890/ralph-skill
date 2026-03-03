@@ -52,7 +52,7 @@ tasks:
     name: "实现用户认证"
     type: "feature"  # feature, bugfix, refactor, test, docs
     depends_on: []  # 依赖的任务 ID 列表
-    ai_engine: "claude"  # 使用的 AI 引擎名称
+    ai_engine: "qwen_code"  # 使用的 AI 引擎名称
     max_retries: 3
     timeout: 1800  # 秒
     hooks:

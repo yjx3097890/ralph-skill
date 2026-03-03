@@ -121,7 +121,10 @@ class FrameworkType(str, Enum):
     DJANGO = "django"  # Django
     FLASK = "flask"  # Flask
     FASTAPI = "fastapi"  # FastAPI
-    GO = "go"  # Go
+    GIN = "gin"  # Gin (Go)
+    ECHO = "echo"  # Echo (Go)
+    EXPRESS = "express"  # Express (Node.js)
+    GO = "go"  # Go (无框架)
     NONE = "none"  # 无框架
 
 
@@ -130,8 +133,10 @@ class TestRunner(str, Enum):
     VITEST = "vitest"  # Vitest
     JEST = "jest"  # Jest
     PYTEST = "pytest"  # pytest
-    GO_TEST = "go_test"  # Go testing
+    TESTING = "testing"  # Go testing
+    GO_TEST = "go_test"  # Go testing (别名)
     PLAYWRIGHT = "playwright"  # Playwright E2E
+    CYPRESS = "cypress"  # Cypress E2E
 
 
 class BuildTool(str, Enum):
@@ -140,6 +145,7 @@ class BuildTool(str, Enum):
     WEBPACK = "webpack"  # Webpack
     ROLLUP = "rollup"  # Rollup
     MAKE = "make"  # Make
+    GO = "go"  # Go build
     NONE = "none"  # 无构建工具
 
 

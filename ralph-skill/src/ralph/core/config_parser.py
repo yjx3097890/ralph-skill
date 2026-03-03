@@ -509,16 +509,14 @@ class ConfigParser:
         
     def _parse_engine_config(self, data: Dict[str, Any]) -> EngineConfig:
         """解析 AI 引擎配置"""
-        # 提取 CLI 相关参数到 extra_params
-        extra_params = {}
-        if "cli_path" in data:
-            extra_params["cli_path"] = data["cli_path"]
-        
         return EngineConfig(
-            engine_type=EngineType(data.get("type", "qwen_code")),
-            model_name=data.get("model"),  # 配置文件中的 model 映射到 model_name
+            type=EngineType(data.get("type", "qwen_code")),
+            model=data.get("model"),
             timeout=data.get("timeout", 60),
-            extra_params=extra_params
+            api_key=data.get("api_key"),
+            api_base=data.get("api_base"),
+            temperature=data.get("temperature", 0.7),
+            max_tokens=data.get("max_tokens", 4096)
         )
         
     def _config_to_dict(self, config: Configuration) -> Dict[str, Any]:
