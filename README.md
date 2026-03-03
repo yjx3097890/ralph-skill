@@ -76,6 +76,15 @@ pipx install qwen-code
 qwen-code --version
 ```
 
+**配置 API 密钥**：
+```bash
+# 设置环境变量
+export QWEN_API_KEY="your-qwen-api-key"
+
+# 或在 .env 文件中添加
+echo "QWEN_API_KEY=your-qwen-api-key" >> .env
+```
+
 #### Aider CLI
 
 ```bash
@@ -89,11 +98,31 @@ pipx install aider-chat
 aider --version
 ```
 
+**配置 API 密钥**（根据使用的模型）：
+```bash
+# 如果使用 GPT-4
+export OPENAI_API_KEY="your-openai-api-key"
+
+# 如果使用 Claude
+export ANTHROPIC_API_KEY="your-anthropic-api-key"
+
+# 或在 .env 文件中添加
+echo "OPENAI_API_KEY=your-openai-api-key" >> .env
+```
+
 #### Claude CLI（可选）
 
 如果使用 Claude，请参考 Anthropic 官方文档安装 CLI 工具。
 
-**注意**：只需安装你实际使用的 AI 引擎的 CLI 工具。例如，如果只使用 Qwen Code，只需安装 `qwen-code`。
+**配置 API 密钥**：
+```bash
+export ANTHROPIC_API_KEY="your-anthropic-api-key"
+```
+
+**重要说明**：
+- CLI 工具通过环境变量读取 API 密钥，不需要在配置文件中设置
+- 只需安装和配置你实际使用的 AI 引擎
+- 建议使用 `.env` 文件管理 API 密钥，避免在命令行中暴露
 
 ### 运行测试
 
@@ -173,8 +202,8 @@ vim config.yaml
 cat > .env << EOF
 # 根据需要选择配置一个或多个
 QWEN_API_KEY=your-qwen-api-key
-# CLAUDE_API_KEY=your-claude-api-key
 # OPENAI_API_KEY=your-openai-api-key
+# ANTHROPIC_API_KEY=your-anthropic-api-key
 EOF
 ```
 
@@ -191,12 +220,15 @@ tasks:
 ai_engines:
   qwen_code:
     type: "qwen_code"
-    api_key: "${QWEN_API_KEY}"
-    model: "qwen-coder-plus"
+    cli_path: "qwen-code"  # CLI 工具路径
+    model: "qwen-coder-plus"  # 模型名称
+    timeout: 60  # 超时时间
 ```
 
 **重要说明**：
-- 你只需要配置实际使用的 AI 引擎的 API 密钥
+- CLI 工具通过环境变量读取 API 密钥（如 `QWEN_API_KEY`）
+- 配置文件中不需要设置 `api_key`，只需配置 CLI 工具路径和模型名称
+- 只需配置实际使用的 AI 引擎
 - 未配置的引擎不会被使用，也不会报错
 - 建议在 `config.yaml` 中删除或注释掉不使用的引擎配置，保持配置文件简洁
 
@@ -365,8 +397,9 @@ QWEN_API_KEY=your-qwen-api-key
 ai_engines:
   qwen_code:
     type: "qwen_code"
-    api_key: "${QWEN_API_KEY}"
+    cli_path: "qwen-code"
     model: "qwen-coder-plus"
+    timeout: 60
 
 # 任务中指定使用 qwen_code
 tasks:
@@ -374,7 +407,7 @@ tasks:
     ai_engine: "qwen_code"
 ```
 
-未配置的引擎不会被加载，也不会报错。
+未配置的引擎不会被加载，也不会报错。CLI 工具会自动从环境变量读取 API 密钥。
 
 **Q: 如何知道 Skill 是否安装成功？**
 
