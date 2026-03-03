@@ -74,21 +74,57 @@ ai_engines:
 
 **方式 A：在 Kiro 中（推荐）**
 
-在 Kiro 聊天中输入：
+在 Kiro 聊天中直接使用：
+
+```
+帮我实现用户登录功能，要求：
+- 支持邮箱和密码登录
+- 使用 JWT 认证
+- 包含单元测试
+```
+
+或者指定配置文件：
 
 ```
 使用 Ralph Skill 根据 ralph-config.yaml 执行任务
 ```
 
-**方式 B：使用脚本**
+**方式 B：使用 Python 直接调用**
 
-```bash
-# 复制运行脚本
-cp ~/.kiro/skills/ralph-skill/examples/simple-todo-app/run_ralph.py .
+```python
+from ralph import autonomous_develop
 
-# 运行
-cd ~/.kiro/skills/ralph-skill
-poetry run python /path/to/my-app/run_ralph.py
+# 直接调用，使用默认配置
+result = autonomous_develop(
+    task_description="实现用户登录功能",
+    requirements=[
+        "支持邮箱和密码登录",
+        "使用 JWT 认证",
+        "包含单元测试"
+    ],
+    project_root="."
+)
+
+print(result)
+# {
+#     "success": True,
+#     "files_changed": ["backend/auth.go", "backend/auth_test.go"],
+#     "commit_hash": "abc123",
+#     "message": "任务执行成功"
+# }
+```
+
+**方式 C：使用配置文件**
+
+```python
+from ralph import autonomous_develop
+
+# 使用配置文件
+result = autonomous_develop(
+    task_description="初始化项目",
+    config_file="ralph-config.yaml",
+    project_root="."
+)
 ```
 
 ## 三、使用示例模板（更快）
