@@ -1,0 +1,32 @@
+[flake8]
+# 最大行长度
+max-line-length = 100
+
+# 排除目录
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    build,
+    dist,
+    *.egg-info,
+    .tox,
+    .mypy_cache,
+    .pytest_cache
+
+# 忽略的错误代码
+ignore =
+    # E203: 切片中的空格（与 black 冲突）
+    E203,
+    # W503: 二元运算符前换行（与 black 冲突）
+    W503,
+    # E501: 行过长（由 black 处理）
+    E501
+
+# 每个文件的最大复杂度
+max-complexity = 10
+
+# 导入顺序检查
+import-order-style = google
+application-import-names = ralph

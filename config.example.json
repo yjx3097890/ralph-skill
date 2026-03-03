@@ -1,0 +1,85 @@
+{
+  "project": {
+    "name": "my-project",
+    "type": "fullstack",
+    "frontend": {
+      "framework": "vue3",
+      "test_runner": "vitest",
+      "e2e_runner": "playwright",
+      "build_tool": "vite",
+      "package_manager": "npm"
+    },
+    "backend": {
+      "language": "go",
+      "framework": "gin",
+      "build_system": "go",
+      "dependency_manager": "go_mod",
+      "test_runner": "testing"
+    }
+  },
+  "tasks": [
+    {
+      "id": "task-1",
+      "name": "实现用户认证",
+      "type": "feature",
+      "depends_on": [],
+      "ai_engine": "claude",
+      "max_retries": 3,
+      "timeout": 1800,
+      "hooks": {
+        "pre_task": [],
+        "post_task": []
+      },
+      "config": {}
+    }
+  ],
+  "settings": {
+    "max_context_size": 100000,
+    "git_auto_commit": true,
+    "sandbox_timeout": 300,
+    "max_retries": 3,
+    "log_level": "info",
+    "enable_hooks": true
+  },
+  "hooks": {
+    "pre_task": [],
+    "post_task": [],
+    "on_error": []
+  },
+  "ai_engines": {
+    "claude": {
+      "type": "claude",
+      "api_key": "${CLAUDE_API_KEY}",
+      "api_base": "https://api.anthropic.com",
+      "model": "claude-3-5-sonnet-20241022",
+      "temperature": 0.7,
+      "max_tokens": 4096,
+      "timeout": 60
+    },
+    "gpt4": {
+      "type": "gpt4",
+      "api_key": "${OPENAI_API_KEY}",
+      "api_base": "https://api.openai.com/v1",
+      "model": "gpt-4-turbo-preview",
+      "temperature": 0.7,
+      "max_tokens": 4096,
+      "timeout": 60
+    },
+    "qwen_code": {
+      "type": "qwen_code",
+      "api_key": "${QWEN_API_KEY}",
+      "api_base": "https://dashscope.aliyuncs.com/api/v1",
+      "model": "qwen-coder-plus",
+      "temperature": 0.7,
+      "max_tokens": 4096,
+      "timeout": 60
+    },
+    "aider": {
+      "type": "aider",
+      "model": "gpt-4",
+      "temperature": 0.7,
+      "max_tokens": 4096,
+      "timeout": 60
+    }
+  }
+}

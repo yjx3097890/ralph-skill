@@ -1,0 +1,127 @@
+# Ralph Skill 配置示例
+# 复制此文件为 config.yaml 并根据实际情况修改
+
+# 项目配置
+project:
+  name: "my-project"
+  type: "fullstack"  # fullstack, frontend, backend
+  
+  # 前端配置（可选）
+  frontend:
+    framework: "vue3"  # vue3, react, angular
+    test_runner: "vitest"  # vitest, jest
+    e2e_runner: "playwright"  # playwright, cypress
+    build_tool: "vite"  # vite, webpack
+    package_manager: "npm"  # npm, yarn, pnpm
+  
+  # 后端配置（可选）
+  backend:
+    language: "go"  # go, python, node
+    framework: "gin"  # gin, echo, fastapi, express
+    build_system: "go"  # go, make
+    dependency_manager: "go_mod"  # go_mod, pip, npm
+    test_runner: "testing"  # testing, pytest, jest
+  
+  # 数据库配置（可选）
+  # database:
+  #   type: "postgresql"  # postgresql, mysql, redis
+  #   host: "localhost"
+  #   port: 5432
+  #   database: "mydb"
+  #   user: "user"
+  #   password: "password"
+  #   ssl_mode: "prefer"  # disable, prefer, require
+  #   connection_timeout: 30
+  #   pool_size: 10
+  #   max_overflow: 20
+  
+  # Docker 配置（可选）
+  # docker:
+  #   has_dockerfile: true
+  #   has_compose: true
+  #   dockerfile_path: "./Dockerfile"
+  #   compose_path: "./docker-compose.yml"
+  #   base_image: "golang:1.21-alpine"
+  #   exposed_ports: [8080, 9090]
+  #   environment:
+  #     ENV: "development"
+
+# 任务配置
+tasks:
+  - id: "task-1"
+    name: "实现用户认证"
+    type: "feature"  # feature, bugfix, refactor, test, docs
+    depends_on: []  # 依赖的任务 ID 列表
+    ai_engine: "claude"  # 使用的 AI 引擎名称
+    max_retries: 3
+    timeout: 1800  # 秒
+    hooks:
+      pre_task: []
+      post_task: []
+    config: {}
+
+# 系统设置
+settings:
+  max_context_size: 100000  # 最大上下文 token 数
+  git_auto_commit: true  # 自动提交代码变更
+  sandbox_timeout: 300  # 沙箱超时时间（秒）
+  max_retries: 3  # 最大重试次数
+  log_level: "info"  # debug, info, warning, error
+  enable_hooks: true  # 启用钩子系统
+
+# 钩子配置
+hooks:
+  pre_task: []  # 任务执行前的钩子
+  post_task: []  # 任务执行后的钩子
+  on_error: []  # 错误发生时的钩子
+
+# AI 引擎配置
+ai_engines:
+  # Claude 配置
+  claude:
+    type: "claude"
+    api_key: "${CLAUDE_API_KEY}"  # 从环境变量读取
+    api_base: "https://api.anthropic.com"
+    model: "claude-3-5-sonnet-20241022"
+    temperature: 0.7
+    max_tokens: 4096
+    timeout: 60
+  
+  # GPT-4 配置
+  gpt4:
+    type: "gpt4"
+    api_key: "${OPENAI_API_KEY}"
+    api_base: "https://api.openai.com/v1"
+    model: "gpt-4-turbo-preview"
+    temperature: 0.7
+    max_tokens: 4096
+    timeout: 60
+  
+  # Qwen Code 配置
+  qwen_code:
+    type: "qwen_code"
+    api_key: "${QWEN_API_KEY}"
+    api_base: "https://dashscope.aliyuncs.com/api/v1"
+    model: "qwen-coder-plus"
+    temperature: 0.7
+    max_tokens: 4096
+    timeout: 60
+  
+  # Aider 配置（本地）
+  aider:
+    type: "aider"
+    model: "gpt-4"
+    temperature: 0.7
+    max_tokens: 4096
+    timeout: 60
+
+# 环境变量说明：
+# 在使用前，请设置以下环境变量：
+# export CLAUDE_API_KEY="your-claude-api-key"
+# export OPENAI_API_KEY="your-openai-api-key"
+# export QWEN_API_KEY="your-qwen-api-key"
+#
+# 或者在 .env 文件中设置：
+# CLAUDE_API_KEY=your-claude-api-key
+# OPENAI_API_KEY=your-openai-api-key
+# QWEN_API_KEY=your-qwen-api-key
