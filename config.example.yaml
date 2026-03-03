@@ -60,9 +60,25 @@ tasks:
       post_task: []
     config: {}
 
+# 安全配置
+safety:
+  enable_sandbox: true  # 启用安全沙箱
+  max_context_tokens: 100000  # 最大上下文 token 数
+  allowed_commands:  # 允许执行的命令列表
+    - "git"
+    - "npm"
+    - "yarn"
+    - "pnpm"
+    - "go"
+    - "python"
+    - "pip"
+    - "poetry"
+    - "docker"
+    - "make"
+
 # 系统设置
 settings:
-  max_context_size: 100000  # 最大上下文 token 数
+  max_context_size: 100000  # 最大上下文 token 数（已弃用，请使用 safety.max_context_tokens）
   git_auto_commit: true  # 自动提交代码变更
   sandbox_timeout: 300  # 沙箱超时时间（秒）
   max_retries: 3  # 最大重试次数

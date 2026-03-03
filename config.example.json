@@ -33,6 +33,22 @@
       "config": {}
     }
   ],
+  "safety": {
+    "enable_sandbox": true,
+    "max_context_tokens": 100000,
+    "allowed_commands": [
+      "git",
+      "npm",
+      "yarn",
+      "pnpm",
+      "go",
+      "python",
+      "pip",
+      "poetry",
+      "docker",
+      "make"
+    ]
+  },
   "settings": {
     "max_context_size": 100000,
     "git_auto_commit": true,
