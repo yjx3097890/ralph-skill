@@ -117,44 +117,41 @@ ai_engines:
   # Claude 配置（如不使用可删除此节）
   # claude:
   #   type: "claude"
-  #   api_key: "${CLAUDE_API_KEY}"  # 从环境变量读取
-  #   api_base: "https://api.anthropic.com"
-  #   model: "claude-3-5-sonnet-20241022"
-  #   temperature: 0.7
-  #   max_tokens: 4096
-  #   timeout: 60
+  # Claude 配置（如不使用可删除此节）
+  # claude:
+  #   type: "claude"
+  #   cli_path: "claude"  # CLI 工具路径，默认从 PATH 查找
+  #   model: "claude-3-5-sonnet-20241022"  # 模型名称
+  #   timeout: 60  # 命令执行超时时间（秒）
   
   # GPT-4 配置（如不使用可删除此节）
   # gpt4:
   #   type: "gpt4"
-  #   api_key: "${OPENAI_API_KEY}"
-  #   api_base: "https://api.openai.com/v1"
-  #   model: "gpt-4-turbo-preview"
-  #   temperature: 0.7
-  #   max_tokens: 4096
-  #   timeout: 60
+  #   cli_path: "openai"  # CLI 工具路径，默认从 PATH 查找
+  #   model: "gpt-4-turbo-preview"  # 模型名称
+  #   timeout: 60  # 命令执行超时时间（秒）
   
   # Qwen Code 配置（如不使用可删除此节）
   qwen_code:
     type: "qwen_code"
     cli_path: "qwen-code"  # CLI 工具路径，默认从 PATH 查找
-    model: "qwen-coder-plus"  # 模型名称，通过 CLI 参数传递
+    model: "qwen-coder-plus"  # 模型名称
     timeout: 60  # 命令执行超时时间（秒）
   
-  # Aider 配置（本地，如不使用可删除此节）
+  # Aider 配置（如不使用可删除此节）
   # aider:
   #   type: "aider"
   #   cli_path: "aider"  # CLI 工具路径，默认从 PATH 查找
-  #   model: "gpt-4"  # 模型名称，通过 CLI 参数传递
+  #   model: "gpt-4"  # 模型名称（支持 gpt-4, claude-3-5-sonnet 等）
   #   timeout: 60  # 命令执行超时时间（秒）
 
 # 环境变量说明：
-# 在使用前，请设置以下环境变量：
-# export CLAUDE_API_KEY="your-claude-api-key"
-# export OPENAI_API_KEY="your-openai-api-key"
+# 在使用前，请设置以下环境变量（只需设置你使用的引擎）：
 # export QWEN_API_KEY="your-qwen-api-key"
+# export OPENAI_API_KEY="your-openai-api-key"
+# export ANTHROPIC_API_KEY="your-anthropic-api-key"
 #
 # 或者在 .env 文件中设置：
-# CLAUDE_API_KEY=your-claude-api-key
-# OPENAI_API_KEY=your-openai-api-key
 # QWEN_API_KEY=your-qwen-api-key
+# OPENAI_API_KEY=your-openai-api-key
+# ANTHROPIC_API_KEY=your-anthropic-api-key
