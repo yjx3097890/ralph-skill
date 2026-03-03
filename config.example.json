@@ -49,6 +49,11 @@
       "make"
     ]
   },
+  "git": {
+    "auto_commit": true,
+    "commit_message_prefix": "feat",
+    "enable_rollback": true
+  },
   "settings": {
     "max_context_size": 100000,
     "git_auto_commit": true,
@@ -56,6 +61,15 @@
     "max_retries": 3,
     "log_level": "info",
     "enable_hooks": true
+  },
+  "frontend": {
+    "framework": "vue3",
+    "test_framework": "vitest",
+    "e2e_framework": "playwright"
+  },
+  "backend": {
+    "language": "go",
+    "test_framework": "testing"
   },
   "hooks": {
     "pre_task": [],

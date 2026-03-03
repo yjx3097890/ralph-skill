@@ -76,14 +76,31 @@ safety:
     - "docker"
     - "make"
 
+# Git 配置
+git:
+  auto_commit: true  # 自动提交代码变更
+  commit_message_prefix: "feat"  # 提交信息前缀（feat, fix, docs, refactor, test）
+  enable_rollback: true  # 启用回滚功能
+
 # 系统设置
 settings:
   max_context_size: 100000  # 最大上下文 token 数（已弃用，请使用 safety.max_context_tokens）
-  git_auto_commit: true  # 自动提交代码变更
+  git_auto_commit: true  # 自动提交代码变更（已弃用，请使用 git.auto_commit）
   sandbox_timeout: 300  # 沙箱超时时间（秒）
   max_retries: 3  # 最大重试次数
   log_level: "info"  # debug, info, warning, error
   enable_hooks: true  # 启用钩子系统
+
+# 前端支持配置（全局设置，会覆盖 project.frontend）
+frontend:
+  framework: "vue3"  # vue3, react, angular
+  test_framework: "vitest"  # vitest, jest
+  e2e_framework: "playwright"  # playwright, cypress
+
+# 后端支持配置（全局设置，会覆盖 project.backend）
+backend:
+  language: "go"  # go, python, node
+  test_framework: "testing"  # testing, pytest, jest
 
 # 钩子配置
 hooks:
