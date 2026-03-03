@@ -66,3 +66,8 @@ temp/
 logs/
 *.db
 *.sqlite3
+
+# 环境变量
+.env
+.env.local
+.env.*.local
