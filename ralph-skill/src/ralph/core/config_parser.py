@@ -626,13 +626,12 @@ class ConfigParser:
             result["ai_engines"] = {}
             for name, engine in config.ai_engines.items():
                 engine_dict = {
-                    "type": engine.engine_type.value,
-                    "model": engine.model_name,
+                    "type": engine.type.value,
+                    "model": engine.model,
                     "timeout": engine.timeout
                 }
-                # 添加 extra_params 中的参数
-                if "cli_path" in engine.extra_params:
-                    engine_dict["cli_path"] = engine.extra_params["cli_path"]
+                # ralph.models.config.EngineConfig 没有 extra_params
+                # 只序列化基本字段
                 result["ai_engines"][name] = engine_dict
             
         return result
