@@ -137,22 +137,16 @@ ai_engines:
   # Qwen Code 配置（如不使用可删除此节）
   qwen_code:
     type: "qwen_code"
-    api_key: "${QWEN_API_KEY}"
-    api_base: "https://coding.dashscope.aliyuncs.com/v1"
-    model: "qwen-coder-plus"
-    temperature: 0.7
-    max_tokens: 4096
-    timeout: 60
     cli_path: "qwen-code"  # CLI 工具路径，默认从 PATH 查找
+    model: "qwen-coder-plus"  # 模型名称，通过 CLI 参数传递
+    timeout: 60  # 命令执行超时时间（秒）
   
   # Aider 配置（本地，如不使用可删除此节）
   # aider:
   #   type: "aider"
-  #   model: "gpt-4"
-  #   temperature: 0.7
-  #   max_tokens: 4096
-  #   timeout: 60
   #   cli_path: "aider"  # CLI 工具路径，默认从 PATH 查找
+  #   model: "gpt-4"  # 模型名称，通过 CLI 参数传递
+  #   timeout: 60  # 命令执行超时时间（秒）
 
 # 环境变量说明：
 # 在使用前，请设置以下环境变量：
