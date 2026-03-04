@@ -5,5 +5,10 @@ Ralph Skill 企业级自治编程引擎
 上下文防爆机制、多 AI 引擎兼容等核心功能。
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __author__ = "Ralph Team"
+
+# 导出主要函数供外部调用
+from ralph.__main__ import autonomous_develop
+
+__all__ = ["autonomous_develop"]

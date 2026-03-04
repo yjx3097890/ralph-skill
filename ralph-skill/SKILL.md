@@ -12,7 +12,81 @@ license: MIT
 
 ## 简介
 
-Ralph Skill 是一个企业级的自治编程引擎，将基础的 Ralph 自治循环脚本升级为多智能体协作引擎。该系统封装为符合标准化 Function Calling Schema 的 Skill，供上层 Master Agent（如 OpenClaw、Kiro）调用，支持前端和后端的全栈自动化开发。
+Ralph Skill 是一个企业级的自治编程引擎，将用户需求自动转化为可执行的代码。
+
+**核心工作流程**：
+1. 用户描述需求 → Ralph 自动生成配置文件和任务列表
+2. 按依赖顺序执行任务
+3. 每个任务：调用 AI 引擎（Qwen/Claude/GPT-4）生成代码 → 运行测试验证 → 失败自动重试
+4. 所有代码变更自动提交到 Git，支持一键回滚
+
+## 如何在 Kiro 中使用
+
+### 方式 1：直接描述需求（推荐）
+
+当用户说"使用 Ralph 创建..."或"用 Ralph 实现..."时，你应该执行以下 Python 代码：
+
+```python
+import sys
+from pathlib import Path
+
+# 添加 Ralph Skill 到路径
+skill_path = Path.home() / ".kiro" / "skills" / "ralph-skill"
+sys.path.insert(0, str(skill_path / "src"))
+
+from ralph import autonomous_develop
+
+# 调用自治开发函数
+result = autonomous_develop(
+    task_description="创建一个 Todo 应用",
+    tech_stack={
+        "frontend": {"framework": "vue3"},
+        "backend": {"language": "go", "framework": "gin"}
+    },
+    requirements=[
+        "支持添加、删除、完成待办事项",
+        "包含单元测试"
+    ],
+    project_root="."  # 当前目录
+)
+
+# 输出结果
+print(f"✅ 完成 {result['tasks_completed']}/{result['tasks_total']} 个任务")
+if not result['success']:
+    print("❌ 部分任务失败，请查看详情")
+```
+
+### 方式 2：使用配置文件
+
+如果用户已经有 `ralph-config.yaml`：
+
+```python
+result = autonomous_develop(
+    task_description="执行配置文件中的任务",
+    config_file="ralph-config.yaml",
+    project_root="."
+)
+```
+
+### 方式 3：使用命令行（在终端中）
+
+```bash
+cd ~/.kiro/skills/ralph-skill
+poetry run python -m ralph develop "创建一个 Todo 应用" \
+    --tech-stack '{"frontend": {"framework": "vue3"}, "backend": {"language": "go"}}' \
+    --requirements "支持添加、删除待办事项" "包含单元测试"
+```
+
+## 重要提示
+
+**不要手动创建项目结构或配置文件！** Ralph 会自动：
+- 生成 `ralph-config.yaml` 配置文件
+- 创建项目目录结构
+- 生成代码
+- 运行测试
+- 提交到 Git
+
+你只需要调用 `autonomous_develop()` 函数即可。
 
 ## 核心能力
 

@@ -51,13 +51,13 @@ qwen --version
 直接在 Kiro 聊天中描述需求：
 
 ```
-帮我创建一个 Todo 应用，要求：
+使用 Ralph 创建一个 Todo 应用，要求：
 - 前端使用 Vue3
 - 后端使用 Go + Gin
 - 包含单元测试
 ```
 
-Ralph 会自动：
+Kiro 会自动调用 Ralph 的 `autonomous_develop()` 函数，Ralph 会自动：
 1. 生成配置文件和任务列表
 2. 依次执行所有任务
 3. 每个任务：AI 生成代码 → 运行测试 → 失败重试
@@ -66,6 +66,13 @@ Ralph 会自动：
 **方式 B：使用 Python 调用**
 
 ```python
+import sys
+from pathlib import Path
+
+# 添加 Ralph Skill 到路径
+skill_path = Path.home() / ".kiro" / "skills" / "ralph-skill"
+sys.path.insert(0, str(skill_path / "src"))
+
 from ralph import autonomous_develop
 
 result = autonomous_develop(
@@ -81,6 +88,15 @@ result = autonomous_develop(
 )
 
 print(f"完成 {result['tasks_completed']}/{result['tasks_total']} 个任务")
+```
+
+**方式 C：使用命令行**
+
+```bash
+cd ~/.kiro/skills/ralph-skill
+poetry run python -m ralph develop "创建一个 Todo 应用" \
+    --tech-stack '{"frontend": {"framework": "vue3"}, "backend": {"language": "go"}}' \
+    --requirements "支持添加、删除待办事项" "包含单元测试"
 ```
 
 ---
