@@ -303,7 +303,7 @@ max_retries: 5
 ## 八、获取帮助
 
 - 查看日志：`~/.kiro/skills/ralph-skill/logs/ralph.log`
-- 示例配置：`~/.kiro/skills/ralph-skill/config.yaml`
+- 示例配置：`~/.kiro/skills/ralph-skill/config.example.yaml`
 - 提交 Issue：GitHub Issues
 - 社区讨论：GitHub Discussions
 

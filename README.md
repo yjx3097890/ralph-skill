@@ -44,7 +44,7 @@ ralph-skill-repo/           # 仓库根目录
 ├── .github/               # GitHub 配置
 ├── ralph-skill/           # Skill 主目录（安装时指向这里）
 │   ├── SKILL.md          # Skill 元数据（必需）
-│   ├── config.yaml       # 配置文件
+│   ├── config.example.yaml  # 配置文件示例
 │   ├── src/              # 源代码
 │   │   └── ralph/
 │   │       ├── core/     # 核心引擎

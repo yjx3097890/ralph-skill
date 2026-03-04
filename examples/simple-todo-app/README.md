@@ -308,7 +308,7 @@ router.Use(cors.New(cors.Config{
 ## 学习资源
 
 - [Ralph Skill 使用指南](../../USAGE_GUIDE.md) - 详细的使用文档
-- [配置文件参考](../../ralph-skill/config.yaml) - 完整的配置示例
+- [配置文件参考](../../ralph-skill/config.example.yaml) - 完整的配置示例
 - [SKILL.md](../../ralph-skill/SKILL.md) - Skill 功能说明
 
 ## 反馈
