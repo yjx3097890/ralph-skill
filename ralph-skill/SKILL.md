@@ -1,8 +1,4 @@
-# Ralph Skill - 企业级自治编程引擎
-
-## 元数据
-
-```yaml
+---
 name: ralph-skill
 version: 1.0.0
 author: Ralph Team
@@ -10,7 +6,9 @@ description: 企业级自治编程引擎，支持前后端全栈自动化开发
 keywords: [autonomous, coding, fullstack, ai, automation, vue3, go, python]
 category: development
 license: MIT
-```
+---
+
+# Ralph Skill - 企业级自治编程引擎
 
 ## 简介
 
