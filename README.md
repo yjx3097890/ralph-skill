@@ -1,10 +1,15 @@
 # Ralph Skill - 企业级自治编程引擎
 
-Ralph Skill 是一个企业级的自治编程引擎，旨在将基础的 Ralph 自治循环脚本升级为多智能体协作引擎。
+Ralph Skill 是一个企业级的自治编程引擎，将用户需求自动转化为可执行的代码。
+
+## 特点
+
+- 🤖 **完全自治**：自动任务规划、代码生成、测试验证、失败重试
+- 🔒 **安全可靠**：Git 版本控制、一键回滚、安全沙箱
+- 🎯 **全栈支持**：Vue3/React 前端，Go/Python 后端
+- 🔌 **多引擎**：支持 Qwen Code、Aider、Claude、GPT-4
 
 ## 快速安装
-
-### 使用 Kiro 安装
 
 ```bash
 # 从 GitHub 安装
@@ -14,71 +19,54 @@ kiro skill install https://github.com/yjx3097890/ralph-skill/tree/main/ralph-ski
 kiro skill install /path/to/ralph-skill-repo/ralph-skill
 ```
 
-### 使用 OpenClaw 安装
+## 快速开始
 
-```bash
-# 从 GitHub 安装
-openclaw skill install https://github.com/yjx3097890/ralph-skill/tree/main/ralph-skill
+在 Kiro 中直接描述需求：
+
+```
+帮我创建一个 Todo 应用，要求：
+- 前端使用 Vue3
+- 后端使用 Go + Gin
+- 包含单元测试
 ```
 
-## 核心特性
-
-- **安全性**: Git 级别的版本控制和回滚机制，安全沙箱环境
-- **可靠性**: 上下文防爆机制，智能错误处理和恢复
-- **扩展性**: 多 AI 引擎兼容，插件化钩子系统
-- **易用性**: 标准化接口，配置文件驱动
-- **全栈支持**: Vue3/Vitest/Playwright 前端，Go/Python 后端
-
-## 技术栈
-
-- **语言**: Python 3.9+
-- **依赖管理**: Poetry
-- **代码质量**: Black, Flake8, Mypy, isort
-- **测试框架**: Pytest
-- **版本控制**: GitPython
+Ralph 会自动：
+1. 生成配置文件和任务列表
+2. 依次执行所有任务
+3. 每个任务：AI 生成代码 → 运行测试 → 失败重试
+4. 返回执行结果
 
 ## 目录结构
 
 ```
 ralph-skill-repo/           # 仓库根目录
-├── .github/               # GitHub 配置
 ├── ralph-skill/           # Skill 主目录（安装时指向这里）
 │   ├── SKILL.md          # Skill 元数据（必需）
+│   ├── README.md         # 完整使用文档
 │   ├── config.example.yaml  # 配置文件示例
-│   ├── src/              # 源代码
-│   │   └── ralph/
-│   │       ├── core/     # 核心引擎
-│   │       ├── models/   # 数据模型
-│   │       ├── managers/ # 管理器
-│   │       ├── adapters/ # AI 引擎适配器
-│   │       ├── sandbox/  # 安全沙箱
-│   │       ├── support/  # 开发支持
-│   │       └── utils/    # 工具函数
+│   ├── src/ralph/        # 源代码
 │   ├── tests/            # 测试
 │   ├── docs/             # 文档
-│   ├── examples/         # 示例
-│   ├── pyproject.toml    # Poetry 配置
-│   └── README.md         # 详细说明
-├── INSTALL_GUIDE.md      # 安装指南
+│   └── examples/         # 示例项目
 └── README.md             # 本文件
 ```
 
 ## 为什么需要子目录？
 
-Kiro/OpenClaw 的 Skill 管理系统设计为支持一个仓库包含多个 Skills，因此要求：
-
+Kiro/OpenClaw 的 Skill 管理系统要求：
 - 每个 Skill 必须在独立的子目录中
 - 子目录中必须包含 `SKILL.md` 文件
 - 安装 URL 必须指向包含 `SKILL.md` 的子目录
 
-这样的设计允许：
-- 一个仓库管理多个相关的 Skills
-- 更清晰的项目组织结构
-- 更灵活的版本管理
+这样的设计允许一个仓库管理多个相关的 Skills。
 
 ## 文档
 
-详细文档请查看 [`ralph-skill/README.md`](ralph-skill/README.md)
+完整文档请查看：
+- 📖 [使用文档](ralph-skill/README.md) - 快速开始、使用示例、配置说明
+- 📋 [安装指南](INSTALL_GUIDE.md) - 详细安装步骤
+- 🎯 [示例项目](ralph-skill/examples/) - 实际项目示例
+- 📚 [技术文档](ralph-skill/docs/) - 架构和开发指南
 
 ## 开发
 
@@ -98,10 +86,6 @@ poetry run isort src tests
 # 类型检查
 poetry run mypy src
 ```
-
-## 贡献
-
-欢迎贡献！请查看 [CONTRIBUTING.md](ralph-skill/CONTRIBUTING.md)
 
 ## 许可证
 

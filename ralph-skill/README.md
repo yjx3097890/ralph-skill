@@ -1,343 +1,502 @@
-# Ralph Skill 企业级自治编程引擎
+# Ralph Skill - 企业级自治编程引擎
 
-Ralph Skill 是一个企业级的自治编程引擎，旨在将基础的 Ralph 自治循环脚本升级为多智能体协作引擎。该系统封装为符合标准化 Function Calling Schema 的 Skill，供上层 Master Agent（如 OpenClaw、Kiro）调用，支持前端和后端的全栈自动化开发。
+Ralph Skill 是一个企业级的自治编程引擎，将用户需求自动转化为可执行的代码。
 
-## 核心特性
+## 目录
 
-- **安全性**: Git 级别的版本控制和回滚机制，安全沙箱环境
-- **可靠性**: 上下文防爆机制，智能错误处理和恢复
-- **扩展性**: 多 AI 引擎兼容，插件化钩子系统
-- **易用性**: 标准化接口，配置文件驱动
-- **全栈支持**: Vue3/Vitest/Playwright 前端，Go/Python 后端
-
-## 技术栈
-
-- **语言**: Python 3.9+
-- **依赖管理**: Poetry
-- **代码质量**: Black, Flake8, Mypy, isort
-- **测试框架**: Pytest
-- **版本控制**: GitPython
-
-## 项目结构
-
-```
-ralph-skill/
-├── skill.md               # Skill 元数据文件（必需）
-├── config.example.yaml    # 配置文件示例
-├── .env                   # 环境变量（需自行创建，不提交到 Git）
-├── src/ralph/             # 源代码
-│   ├── core/             # 核心引擎
-│   ├── models/           # 数据模型
-│   ├── managers/         # 管理器（任务、Git、上下文、钩子）
-│   ├── adapters/         # AI 引擎适配器
-│   ├── sandbox/          # 安全沙箱
-│   ├── support/          # 开发支持（前端、后端、Docker）
-│   └── utils/            # 工具函数
-├── tests/                # 测试
-│   ├── unit/            # 单元测试
-│   ├── integration/     # 集成测试
-│   └── e2e/             # 端到端测试
-├── pyproject.toml       # Poetry 配置
-└── README.md            # 项目说明
-```
-
-### 重要文件说明
-
-- **skill.md**: Skill 元数据文件，定义 Skill 的名称、版本、能力和接口。这是 Kiro/OpenClaw 识别和加载 Skill 的关键文件，必须存在。
-- **config.example.yaml**: 配置文件示例，用户可以复制并修改。Skill 不直接使用此文件。
-- **pyproject.toml**: Python 项目配置，包含依赖和开发工具配置。
-
-## 快速开始
-
-### 安装依赖
-
-```bash
-# 安装 Poetry（如果尚未安装）
-curl -sSL https://install.python-poetry.org | python3 -
-
-# 安装项目依赖
-poetry install
-```
-
-### 安装 AI 引擎 CLI 工具
-
-Ralph Skill 通过 CLI 工具调用 AI 引擎，需要先安装相应的工具。
-
-#### 为什么使用 CLI 工具？
-
-- ✅ 利用官方 CLI 工具的完整功能和最新特性
-- ✅ 避免重复实现 API 调用逻辑
-- ✅ 更好地处理流式输出和交互式会话
-- ✅ 简化认证和配置管理
-- ✅ 更容易调试和排查问题
-
-#### 推荐使用 pipx 安装
-
-`pipx` 可以在隔离的环境中安装 Python CLI 工具，避免依赖冲突：
-
-```bash
-# 安装 pipx（如果尚未安装）
-# macOS
-brew install pipx
-pipx ensurepath
-
-# Linux
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
-
-# 重新加载 shell 配置
-source ~/.bashrc  # 或 source ~/.zshrc
-```
+- [快速开始](#快速开始)
+- [核心特性](#核心特性)
+- [工作原理](#工作原理)
+- [使用示例](#使用示例)
+- [配置说明](#配置说明)
+- [常见问题](#常见问题)
 
 ---
 
-#### 1. Qwen Code CLI
+## 快速开始
 
-**官方仓库**: https://github.com/QwenLM/qwen-code
-
-**安装方法**：
+### 1. 安装 Skill
 
 ```bash
-# 方法 1: 快速安装（推荐）
-# Linux / macOS
+# 复制到 Kiro Skills 目录
+cp -r ralph-skill ~/.kiro/skills/
+
+# 安装依赖
+cd ~/.kiro/skills/ralph-skill
+poetry install
+```
+
+### 2. 安装 AI 引擎
+
+以 Qwen Code 为例：
+
+```bash
+# 快速安装
 curl -fsSL https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.sh | bash
 
-# Windows (以管理员身份运行 CMD)
-curl -fsSL -o %TEMP%\install-qwen.bat https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.bat && %TEMP%\install-qwen.bat
-
-# 方法 2: 使用 npm 安装（需要 Node.js 20+）
+# 或使用 npm
 npm install -g @qwen-code/qwen-code@latest
 
-# 方法 3: 使用 Homebrew 安装（macOS/Linux）
-brew install qwen-code
+# 登录认证
+qwen auth login
 
-# 安装后重启终端以使环境变量生效
 # 验证安装
 qwen --version
 ```
 
-**配置认证**：
+### 3. 开始使用
 
-Qwen Code 支持两种认证方式：
+**方式 A：在 Kiro 中使用（推荐）**
 
-1. **Qwen OAuth（推荐，免费）**：
-   ```bash
-   # 启动 qwen 后运行
-   qwen
-   # 在会话中输入
-   /auth
-   # 选择 Qwen OAuth，在浏览器中完成登录
-   ```
+直接在 Kiro 聊天中描述需求：
 
-2. **API-KEY 方式**（更灵活，支持多种提供商）：
-   
-   编辑 `~/.qwen/settings.json`：
-   ```json
-   {
-     "modelProviders": {
-       "openai": [
-         {
-           "id": "qwen3-coder-plus",
-           "name": "qwen3-coder-plus",
-           "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-           "description": "Qwen3-Coder via Dashscope",
-           "envKey": "DASHSCOPE_API_KEY"
-         }
-       ]
-     },
-     "env": {
-       "DASHSCOPE_API_KEY": "sk-xxxxxxxxxxxxx"
-     },
-     "security": {
-       "auth": {
-         "selectedType": "openai"
-       }
-     },
-     "model": {
-       "name": "qwen3-coder-plus"
-     }
-   }
-   ```
+```
+帮我创建一个 Todo 应用，要求：
+- 前端使用 Vue3
+- 后端使用 Go + Gin
+- 包含单元测试
+```
 
-**获取 API 密钥**：
-1. 访问 [阿里云百炼平台](https://bailian.console.aliyun.com/) 或 [DashScope](https://dashscope.aliyuncs.com/)
-2. 注册/登录账号
-3. 进入 API-KEY 管理页面
-4. 创建新的 API 密钥
+Ralph 会自动：
+1. 生成配置文件和任务列表
+2. 依次执行所有任务
+3. 每个任务：AI 生成代码 → 运行测试 → 失败重试
+4. 返回执行结果
 
-**测试 CLI 工具**：
+**方式 B：使用 Python 调用**
 
-```bash
-# 启动交互式会话
-qwen
+```python
+from ralph import autonomous_develop
 
-# 在会话中尝试：
-# What does this project do?
-# Explain the codebase structure.
-# Help me refactor this function.
+result = autonomous_develop(
+    task_description="创建一个 Todo 应用",
+    tech_stack={
+        "frontend": {"framework": "vue3"},
+        "backend": {"language": "go", "framework": "gin"}
+    },
+    requirements=[
+        "支持添加、删除、完成待办事项",
+        "包含单元测试"
+    ]
+)
+
+print(f"完成 {result['tasks_completed']}/{result['tasks_total']} 个任务")
 ```
 
 ---
 
-#### 2. Aider CLI
+## 核心特性
 
-**官方仓库**: https://github.com/paul-gauthier/aider
+### 🤖 完全自治
 
-**安装方法**：
+- **自动任务规划**：根据需求自动分解为可执行任务
+- **智能代码生成**：调用 AI 引擎生成高质量代码
+- **自动测试验证**：每个任务完成后自动运行测试
+- **失败自动重试**：测试失败时自动重试，最多 3 次
 
-```bash
-# 方法 1: 使用 pipx 安装（推荐）
-pipx install aider-chat
+### 🔒 安全可靠
 
-# 方法 2: 使用 pip 安装
-pip install aider-chat
+- **Git 版本控制**：所有代码变更自动提交
+- **一键回滚**：任何时候都可以回滚到之前的版本
+- **安全沙箱**：代码执行在隔离环境中
+- **上下文防爆**：智能管理上下文大小，防止 token 超限
 
-# 验证安装
-aider --version
+### 🎯 技术栈支持
+
+**前端**
+- 框架：Vue3, React, Angular
+- 测试：Vitest, Jest, Playwright, Cypress
+- 构建：Vite, Webpack
+- 包管理：npm, yarn, pnpm
+
+**后端**
+- 语言：Go, Python, Node.js
+- 框架：Gin, Echo, FastAPI, Express
+- 测试：Go testing, Pytest, Jest
+- 数据库：PostgreSQL, MySQL, Redis
+
+### 🔌 多引擎支持
+
+- Qwen Code
+- Aider
+- Claude
+- GPT-4
+
+---
+
+## 工作原理
+
+```
+用户需求 → Ralph Skill
+    ↓
+1. 任务规划器分析需求
+    ↓
+2. 生成配置文件和任务列表
+    ↓
+3. 按依赖顺序执行任务
+    ↓
+4. 每个任务循环：
+   - AI 生成代码
+   - 运行测试验证
+   - 失败则重试
+   - 成功则提交
+    ↓
+5. 返回执行结果
 ```
 
-**配置 API 密钥**（根据使用的模型）：
+### 自动生成的配置示例
 
-```bash
-# 如果使用 GPT-4
-export OPENAI_API_KEY="your-openai-api-key"
-echo 'export OPENAI_API_KEY="your-openai-api-key"' >> ~/.bashrc
+Ralph 会自动生成类似这样的配置：
 
-# 如果使用 Claude
-export ANTHROPIC_API_KEY="your-anthropic-api-key"
-echo 'export ANTHROPIC_API_KEY="your-anthropic-api-key"' >> ~/.bashrc
+```yaml
+project:
+  name: "todo-app"
+  type: "fullstack"
+  frontend:
+    framework: "vue3"
+    test_runner: "vitest"
+  backend:
+    language: "go"
+    framework: "gin"
 
-# 如果使用 Gemini
-export GEMINI_API_KEY="your-gemini-api-key"
-echo 'export GEMINI_API_KEY="your-gemini-api-key"' >> ~/.bashrc
+tasks:
+  - id: "task-init"
+    name: "初始化项目结构"
+    type: "feature"
+    depends_on: []
+    
+  - id: "task-backend"
+    name: "实现后端 API"
+    type: "feature"
+    depends_on: ["task-init"]
+    
+  - id: "task-frontend"
+    name: "实现前端界面"
+    type: "feature"
+    depends_on: ["task-backend"]
+    
+  - id: "task-tests"
+    name: "添加测试"
+    type: "test"
+    depends_on: ["task-frontend"]
 
-# 重新加载配置
-source ~/.bashrc
-```
-
-**获取 API 密钥**：
-- **OpenAI**: https://platform.openai.com/api-keys
-- **Anthropic**: https://console.anthropic.com/settings/keys
-- **Google Gemini**: https://makersuite.google.com/app/apikey
-
-**测试 CLI 工具**：
-
-```bash
-# 测试 Aider（会在当前目录创建临时文件）
-mkdir -p /tmp/aider-test && cd /tmp/aider-test
-echo "print('hello')" > test.py
-aider --message "添加一个函数计算两数之和" test.py
-
-# 查看帮助
-aider --help
+ai_engines:
+  qwen_code:
+    type: "qwen_code"
+    model: "qwen3-coder-plus"
+    timeout: 60
 ```
 
 ---
 
-#### 3. Claude CLI（可选）
+## 使用示例
 
-**官方文档**: https://docs.anthropic.com/claude/docs
+### 示例 1：快速原型
 
-目前 Anthropic 没有提供官方的独立 CLI 工具，但可以通过以下方式使用：
+```python
+from ralph import autonomous_develop
 
-**方法 1: 使用 Aider（推荐）**
-
-Aider 支持 Claude 模型，只需配置 API 密钥：
-
-```bash
-export ANTHROPIC_API_KEY="your-anthropic-api-key"
-aider --model claude-3-5-sonnet-20241022
+# 创建一个简单的 API
+result = autonomous_develop(
+    task_description="创建一个 Hello World API",
+    tech_stack={"backend": {"language": "go", "framework": "gin"}},
+    requirements=["实现 GET /hello 端点", "返回 JSON 格式"]
+)
 ```
 
-**方法 2: 使用第三方 CLI 工具**
+### 示例 2：全栈应用
 
-```bash
-# 安装 anthropic-cli（社区工具）
-pipx install anthropic-cli
+```python
+# 创建完整的 Todo 应用
+result = autonomous_develop(
+    task_description="创建一个 Todo 应用",
+    tech_stack={
+        "frontend": {"framework": "vue3"},
+        "backend": {"language": "go", "framework": "gin"}
+    },
+    requirements=[
+        "支持添加、删除、完成待办事项",
+        "前端使用 Vue3 + Vite",
+        "后端使用 Go + Gin",
+        "包含单元测试和 E2E 测试"
+    ]
+)
+```
 
-# 配置 API 密钥
-export ANTHROPIC_API_KEY="your-anthropic-api-key"
+### 示例 3：使用配置文件
 
-# 使用
-anthropic "实现一个快速排序算法"
+如果需要更精细的控制，可以手动创建配置文件：
+
+```python
+# 使用自定义配置
+result = autonomous_develop(
+    task_description="初始化项目",
+    config_file="./my-config.yaml",
+    project_root="./my-project"
+)
 ```
 
 ---
 
-#### 4. OpenAI CLI（可选）
+## 配置说明
 
-**官方文档**: https://platform.openai.com/docs/api-reference
+### 项目配置
 
-**安装方法**：
+```yaml
+project:
+  name: "项目名称"
+  type: "fullstack"  # frontend, backend, fullstack
+  
+  frontend:
+    framework: "vue3"  # vue3, react, angular
+    test_runner: "vitest"  # vitest, jest
+    e2e_runner: "playwright"  # playwright, cypress
+    build_tool: "vite"  # vite, webpack
+    package_manager: "npm"  # npm, yarn, pnpm
+  
+  backend:
+    language: "go"  # go, python, node
+    framework: "gin"  # gin, echo, fastapi, express
+    build_system: "go"  # go, make
+    test_runner: "testing"  # testing, pytest, jest
+```
+
+### 任务配置
+
+```yaml
+tasks:
+  - id: "task-1"
+    name: "任务名称"
+    type: "feature"  # feature, bugfix, refactor, test, docs
+    depends_on: []  # 依赖的任务 ID
+    ai_engine: "qwen_code"
+    max_retries: 3
+    timeout: 1800
+    config:
+      description: "详细的任务描述"
+```
+
+### AI 引擎配置
+
+```yaml
+ai_engines:
+  qwen_code:
+    type: "qwen_code"
+    model: "qwen3-coder-plus"
+    timeout: 60
+```
+
+Ralph 会自动生成配置，也可以手动创建 `ralph-config.yaml`。
+
+---
+
+## 常见问题
+
+### Q: 如何查看执行日志？
 
 ```bash
-# 安装 OpenAI CLI
-pipx install openai
+tail -f ~/.kiro/skills/ralph-skill/logs/ralph.log
+```
 
-# 配置 API 密钥
-export OPENAI_API_KEY="your-openai-api-key"
+### Q: 任务执行失败怎么办？
 
-# 测试
-openai api chat.completions.create -m gpt-4 -g user "Hello"
+Ralph 会自动重试最多 3 次。如果仍然失败：
+
+1. 查看日志了解错误原因
+2. 检查 AI 引擎是否正常工作
+3. 尝试调整任务描述，提供更多上下文
+
+### Q: 如何回滚代码？
+
+```bash
+# 查看提交历史
+git log --oneline
+
+# 回滚到上一个版本
+git reset --hard HEAD~1
+
+# 回滚到特定提交
+git reset --hard <commit-hash>
+```
+
+### Q: 支持哪些 AI 引擎？
+
+目前支持：
+- **Qwen Code**（推荐）：免费，性能好
+- **Aider**：支持多种模型
+- **Claude**：代码质量高
+- **GPT-4**：通用性强
+
+### Q: 如何添加自定义任务？
+
+创建 `ralph-config.yaml` 并添加任务：
+
+```yaml
+tasks:
+  - id: "custom-task"
+    name: "自定义任务"
+    type: "feature"
+    depends_on: ["task-init"]
+    ai_engine: "qwen_code"
+    config:
+      description: "你的任务描述"
+```
+
+### Q: 可以在团队中使用吗？
+
+可以！建议：
+1. 将生成的 `ralph-config.yaml` 提交到 Git
+2. 使用环境变量管理敏感信息
+3. 团队成员使用相同的配置
+
+---
+
+## 最佳实践
+
+### 1. 明确需求
+
+提供清晰、具体的需求描述：
+
+```python
+# ✅ 好的示例
+autonomous_develop(
+    task_description="实现用户登录功能",
+    requirements=[
+        "支持邮箱和密码登录",
+        "使用 JWT 认证",
+        "密码使用 bcrypt 加密",
+        "登录失败 5 次后锁定 15 分钟",
+        "包含单元测试和集成测试"
+    ]
+)
+
+# ❌ 不好的示例
+autonomous_develop(
+    task_description="做一个登录"
+)
+```
+
+### 2. 分步执行
+
+对于复杂项目，建议分阶段执行：
+
+```python
+# 阶段 1：基础功能
+autonomous_develop("实现基础 CRUD 功能")
+
+# 阶段 2：添加验证
+autonomous_develop("添加数据验证和错误处理")
+
+# 阶段 3：添加权限
+autonomous_develop("添加用户权限控制")
+```
+
+### 3. 代码审查
+
+Ralph 生成的代码建议人工审查后再合并到主分支。
+
+### 4. 测试验证
+
+运行生成的测试确保功能正确：
+
+```bash
+# 后端测试
+cd backend && go test ./...
+
+# 前端测试
+cd frontend && npm test
 ```
 
 ---
 
-#### 常见问题
+## 示例项目
 
-**Q: 为什么推荐使用 pipx？**
+查看 [`examples/simple-todo-app/`](examples/simple-todo-app/) 获取完整示例。
 
-A: `pipx` 会为每个工具创建独立的虚拟环境，避免依赖冲突。例如：
-- Qwen Code 可能依赖 `requests==2.28.0`
-- Aider 可能依赖 `requests==2.31.0`
-- 使用 `pip` 安装会导致冲突，使用 `pipx` 则不会
+---
 
-**Q: CLI 工具安装失败怎么办？**
+## 故障排查
 
-A: 常见解决方法：
+### 问题：找不到 AI 引擎
+
 ```bash
-# 1. 更新 pip
-python3 -m pip install --upgrade pip
+# 检查 Qwen 是否安装
+qwen --version
 
-# 2. 清理缓存
-pip cache purge
-
-# 3. 使用国内镜像（如果网络问题）
-pip install qwen-code -i https://pypi.tuna.tsinghua.edu.cn/simple
-
-# 4. 检查 Python 版本（需要 Python 3.8+）
-python3 --version
+# 重新登录
+qwen auth login
 ```
 
-**Q: 如何验证 API 密钥是否正确？**
+### 问题：测试失败
 
-A: 使用 CLI 工具测试：
 ```bash
-# Qwen Code
-qwen-code "print hello world" --language python
+# 查看详细日志
+tail -f ~/.kiro/skills/ralph-skill/logs/ralph.log
 
-# Aider
-aider --model gpt-4 --message "hello"
-
-# 如果 API 密钥错误，会显示认证失败的错误信息
+# 手动运行测试
+cd backend && go test -v ./...
 ```
 
-**Q: 可以同时安装多个 CLI 工具吗？**
+### 问题：配置解析失败
 
-A: 可以！使用 `pipx` 安装不会冲突：
 ```bash
-pipx install qwen-code
-pipx install aider-chat
-pipx install openai
-
-# 查看已安装的工具
-pipx list
+# 验证 YAML 语法
+python -c "import yaml; yaml.safe_load(open('ralph-config.yaml'))"
 ```
 
-**重要说明**：
-- CLI 工具通过环境变量读取 API 密钥，不需要在配置文件中设置
-- 只需安装你实际使用的 AI 引擎的 CLI 工具
-- 建议使用 `.env` 文件管理 API 密钥，避免在命令行中暴露
+---
+
+## 技术架构
+
+### 核心组件
+
+- **TaskPlanner**: 任务规划器，分析需求并生成任务列表
+- **RalphEngine**: 核心引擎，协调所有组件执行任务
+- **AIEngineManager**: AI 引擎管理器，支持多种 AI 引擎
+- **GitManager**: Git 管理器，处理版本控制
+- **TestRunner**: 测试运行器，自动运行测试验证
+- **SafetySandbox**: 安全沙箱，隔离代码执行
+
+### 目录结构
+
+```
+ralph-skill/
+├── SKILL.md               # Skill 元数据文件（必需）
+├── config.example.yaml    # 配置文件示例
+├── .env                   # 环境变量（需自行创建，不提交到 Git）
+├── src/ralph/             # 源代码
+│   ├── __main__.py        # 主入口
+│   ├── core/              # 核心引擎
+│   │   ├── ralph_engine.py
+│   │   └── config_parser.py
+│   ├── models/            # 数据模型
+│   ├── managers/          # 管理器
+│   │   ├── task_planner.py
+│   │   ├── task_manager.py
+│   │   ├── git_manager.py
+│   │   └── ...
+│   ├── adapters/          # AI 引擎适配器
+│   │   ├── qwen_code_adapter.py
+│   │   ├── aider_adapter.py
+│   │   └── ...
+│   ├── sandbox/           # 安全沙箱
+│   └── support/           # 开发支持
+├── tests/                 # 测试
+├── docs/                  # 文档
+├── examples/              # 示例
+└── pyproject.toml         # Poetry 配置
+```
+
+---
+
+## 开发
+
+### 安装开发依赖
+
+```bash
+cd ralph-skill
+poetry install
+```
 
 ### 运行测试
 
@@ -345,390 +504,46 @@ pipx list
 # 运行所有测试
 poetry run pytest
 
-# 运行单元测试
-poetry run pytest tests/unit
+# 运行特定测试
+poetry run pytest tests/unit/
 
-# 运行测试并生成覆盖率报告
+# 查看覆盖率
 poetry run pytest --cov=ralph --cov-report=html
 ```
 
-### 代码质量检查
+### 代码质量
 
 ```bash
-# 代码格式化
+# 格式化代码
 poetry run black src tests
-
-# 导入排序
 poetry run isort src tests
-
-# 代码检查
-poetry run flake8 src tests
 
 # 类型检查
 poetry run mypy src
+
+# 代码检查
+poetry run flake8 src tests
 ```
 
-## 在 AI Agent 中使用 Ralph Skill
+---
 
-Ralph Skill 可以作为 Skill 集成到支持 Function Calling 的 AI Agent 系统中，如 OpenClaw 和 Kiro。
+## 贡献
 
-### 什么是 Skill？
-
-Skill 是一种标准化的能力封装方式，让 AI Agent 能够调用外部工具和服务。Ralph Skill 将自治编程能力封装为标准接口，供上层 Agent 调用。
-
-### 在 Kiro 中使用
-
-Kiro 是一个 AI 驱动的 IDE，支持通过 Skills 扩展能力。
-
-#### 1. 安装 Ralph Skill
-
-将 Ralph Skill 安装到 Kiro 的 skills 目录：
-
-```bash
-# 用户级别（推荐）
-mkdir -p ~/.kiro/skills/
-cd ~/.kiro/skills/
-git clone git@github.com:yjx3097890/ralph-skill.git
-
-# 或工作区级别
-mkdir -p .kiro/skills/
-cd .kiro/skills/
-git clone git@github.com:yjx3097890/ralph-skill.git
-```
-
-#### 2. 配置 Skill
-
-在 Ralph Skill 目录中编辑配置文件：
-
-```bash
-cd ~/.kiro/skills/ralph-skill
-
-# 编辑配置文件（可选，Skill 会自动生成配置）
-# 如果需要自定义，可以参考示例
-vim ralph-config.yaml
-```
-
-创建 `.env` 文件设置 API 密钥（只需配置你要使用的 AI 引擎）：
-
-```bash
-# 创建 .env 文件
-# 注意：只需要配置你实际使用的 AI 引擎的 API 密钥
-# 例如，如果只使用 Qwen，只需设置 QWEN_API_KEY
-
-cat > .env << EOF
-# 根据需要选择配置一个或多个
-QWEN_API_KEY=your-qwen-api-key
-# OPENAI_API_KEY=your-openai-api-key
-# ANTHROPIC_API_KEY=your-anthropic-api-key
-EOF
-```
-
-Ralph Skill 会自动生成配置文件，或者你可以参考 `config.example.yaml` 创建自定义配置。
-
-如果需要指定 AI 引擎，在项目目录创建 `ralph-config.yaml`：
-
-```yaml
-# 在任务配置中指定使用的引擎
-tasks:
-  - id: "task-1"
-    name: "实现用户认证"
-    ai_engine: "qwen_code"  # 使用 Qwen（或 claude, gpt4, aider）
-    
-# AI 引擎配置（只需保留你使用的引擎配置）
-ai_engines:
-  qwen_code:
-    type: "qwen_code"
-    cli_path: "qwen-code"  # CLI 工具路径
-    model: "qwen-coder-plus"  # 模型名称
-    timeout: 60  # 超时时间
-```
-
-**重要说明**：
-- CLI 工具通过环境变量读取 API 密钥（如 `QWEN_API_KEY`）
-- 配置文件中不需要设置 `api_key`，只需配置 CLI 工具路径和模型名称
-- 只需配置实际使用的 AI 引擎
-- 未配置的引擎不会被使用，也不会报错
-- Ralph 会自动生成配置，也可以手动创建 `ralph-config.yaml`
-
-#### 3. 在 Kiro 中激活 Skill
-
-在 Kiro 中，你可以通过以下方式使用 Ralph Skill：
-
-**方式 1：通过聊天界面**
-
-```
-你: 使用 Ralph Skill 帮我实现一个用户登录功能
-
-Kiro: [自动检测并激活 Ralph Skill]
-      正在使用 Ralph Skill 进行自治开发...
-```
-
-**方式 2：通过命令面板**
-
-1. 按 `Cmd/Ctrl + Shift + P` 打开命令面板
-2. 输入 "Activate Skill"
-3. 选择 "ralph-skill"
-4. 在聊天中描述你的需求
-
-**方式 3：在 Spec 中引用**
-
-在 `.kiro/specs/` 目录下的需求文档中引用 Skill：
-
-```markdown
-# 需求文档
-
-## 实现方式
-
-使用 #ralph-skill 进行自治开发，实现以下功能：
-- 用户注册
-- 用户登录
-- 密码重置
-```
-
-#### 4. 查看 Skill 状态
-
-```bash
-# 查看已安装的 Skills
-ls ~/.kiro/skills/
-
-# 查看 Ralph Skill 日志
-tail -f ~/.kiro/skills/ralph-skill/logs/ralph.log
-```
-
-### 在 OpenClaw 中使用
-
-OpenClaw 是一个多智能体协作平台，支持通过 Skills 扩展能力。
-
-#### 1. 注册 Skill
-
-在 OpenClaw 配置文件中注册 Ralph Skill：
-
-```yaml
-# ~/.openclaw/config.yaml
-skills:
-  - name: ralph-skill
-    path: /path/to/ralph-skill
-    enabled: true
-    config:
-      ai_engine:
-        type: claude
-        api_key: ${CLAUDE_API_KEY}
-```
-
-#### 2. 调用 Skill
-
-在 OpenClaw 的任务定义中调用 Ralph Skill：
-
-```python
-from openclaw import Agent, Task
-
-agent = Agent(name="developer")
-
-task = Task(
-    description="实现用户认证模块",
-    agent=agent,
-    skills=["ralph-skill"],
-    context={
-        "requirements": "支持邮箱和手机号登录",
-        "tech_stack": "Go + Gin + GORM"
-    }
-)
-
-result = task.execute()
-```
-
-### Skill 功能说明
-
-Ralph Skill 提供以下核心能力：
-
-| 功能 | 说明 | 示例 |
-|------|------|------|
-| **自治开发** | 根据需求自动生成代码 | "实现用户注册功能" |
-| **测试生成** | 自动生成单元测试和集成测试 | "为登录模块生成测试" |
-| **代码重构** | 智能重构和优化代码 | "重构用户服务层" |
-| **Bug 修复** | 自动诊断和修复问题 | "修复登录失败的 bug" |
-| **文档生成** | 生成 API 文档和注释 | "生成 API 文档" |
-| **前端支持** | Vue3/React 组件开发 | "实现登录表单组件" |
-| **后端支持** | Go/Python 服务开发 | "实现 RESTful API" |
-
-### 配置选项
-
-Ralph Skill 支持丰富的配置选项：
-
-```yaml
-# config.yaml
-
-# AI 引擎配置
-ai_engine:
-  type: "claude"              # AI 引擎类型
-  api_key: "your-api-key"     # API 密钥
-  model: "claude-3-5-sonnet"  # 模型名称
-  temperature: 0.7            # 温度参数
-  max_tokens: 4096            # 最大 token 数
-
-# 安全配置
-safety:
-  enable_sandbox: true        # 启用沙箱
-  max_context_tokens: 100000  # 最大上下文 token
-  allowed_commands:           # 允许的命令
-    - "git"
-    - "npm"
-    - "go"
-
-# Git 配置
-git:
-  auto_commit: true           # 自动提交
-  commit_message_prefix: "feat" # 提交信息前缀
-  enable_rollback: true       # 启用回滚
-
-# 钩子配置
-hooks:
-  pre_task: []                # 任务前钩子
-  post_task: []               # 任务后钩子
-  on_error: []                # 错误钩子
-
-# 前端支持
-frontend:
-  framework: "vue3"           # 前端框架
-  test_framework: "vitest"    # 测试框架
-  e2e_framework: "playwright" # E2E 测试框架
-
-# 后端支持
-backend:
-  language: "go"              # 后端语言
-  test_framework: "testing"   # 测试框架
-```
-
-### 常见问题
-
-**Q: 只配置一个 AI 引擎可以吗？**
-
-A: 可以！你只需要配置实际使用的 AI 引擎。例如只使用 Qwen：
-
-```bash
-# .env 文件
-QWEN_API_KEY=your-qwen-api-key
-```
-
-```yaml
-# config.yaml - 只保留 qwen_code 配置
-ai_engines:
-  qwen_code:
-    type: "qwen_code"
-    cli_path: "qwen-code"
-    model: "qwen-coder-plus"
-    timeout: 60
-
-# 任务中指定使用 qwen_code
-tasks:
-  - id: "task-1"
-    ai_engine: "qwen_code"
-```
-
-未配置的引擎不会被加载，也不会报错。CLI 工具会自动从环境变量读取 API 密钥。
-
-**Q: 如何知道 Skill 是否安装成功？**
-
-A: 在 Kiro 中，打开命令面板（`Cmd/Ctrl + Shift + P`），输入 "List Skills"，应该能看到 ralph-skill。
-
-**Q: Skill 调用失败怎么办？**
-
-A: 检查以下几点：
-1. AI 引擎是否正确安装和配置
-2. API 密钥是否有效（如使用 API 方式）
-3. 查看日志文件：`~/.kiro/skills/ralph-skill/logs/ralph.log`
-
-**Q: 如何更新 Skill？**
-
-A: 进入 Skill 目录执行：
-```bash
-cd ~/.kiro/skills/ralph-skill
-git pull
-poetry install
-```
-
-注意：更新后配置会自动生成，无需手动修改。
-
-**Q: 可以同时使用多个 AI 引擎吗？**
-
-A: 可以。在配置文件中设置 `ai_engine.type`，支持 claude、gpt4、aider、qwen 等。
-
-**Q: Skill 会修改我的代码吗？**
-
-A: Ralph Skill 使用 Git 进行版本控制，所有修改都会自动提交。如果不满意，可以使用 `git reset` 回滚。
-
-### 最佳实践
-
-1. **明确需求**：向 Agent 提供清晰的需求描述，包括功能、技术栈、约束条件
-2. **分步执行**：对于复杂任务，建议分解为多个小任务逐步完成
-3. **代码审查**：Skill 生成的代码建议人工审查后再合并到主分支
-4. **测试验证**：运行生成的测试确保功能正确性
-5. **配置管理**：使用环境变量管理敏感信息（如 API 密钥）
-
-### 示例：完整工作流
-
-```bash
-# 1. 安装 Skill
-mkdir -p ~/.kiro/skills/
-cd ~/.kiro/skills/
-git clone git@github.com:yjx3097890/ralph-skill.git
-cd ralph-skill
-poetry install
-
-# 2. 配置环境变量（只配置你使用的 AI 引擎）
-cat > .env << EOF
-QWEN_API_KEY=your-qwen-api-key
-EOF
-
-# 3. Ralph 会自动生成配置，直接使用即可
-# 如果需要自定义，可以参考 config.example.yaml
-
-# 4. 在 Kiro 中使用
-# 打开 Kiro，在聊天中输入：
-# "使用 Ralph Skill 实现用户登录功能，要求：
-#  - 支持邮箱和密码登录
-#  - 使用 JWT 认证
-#  - 包含单元测试
-#  - 技术栈：Go + Gin + GORM"
-
-# 4. 查看结果
-git log  # 查看自动提交记录
-git diff HEAD~1  # 查看代码变更
-
-# 5. 运行测试
-go test ./...
-
-# 6. 如果需要回滚
-git reset --hard HEAD~1
-```
-
-## 开发指南
-
-### 代码规范
-
-- 遵循 PEP 8 代码风格
-- 使用 Black 进行代码格式化（行长度 100）
-- 使用 isort 进行导入排序
-- 使用类型注解（Type Hints）
-- 编写中文注释和文档字符串
-
-### 测试规范
-
-- 单元测试覆盖率 > 80%
-- 为所有公共函数编写测试
-- 使用 pytest 标记区分测试类型（unit, integration, e2e）
-- 测试文件命名：`test_*.py` 或 `*_test.py`
-
-### 提交规范
-
-- 提交信息使用中文
-- 格式：`类型: 简短描述`
-- 类型：功能、修复、文档、测试、重构、样式
+欢迎贡献！请查看 [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## 许可证
 
 MIT License
 
-## 联系方式
+---
 
-Ralph Team
+## 支持
+
+- 📖 [完整文档](docs/)
+- 💬 [GitHub Discussions](https://github.com/yjx3097890/ralph-skill/discussions)
+- 🐛 [报告问题](https://github.com/yjx3097890/ralph-skill/issues)
+- 📧 联系作者
+
+---
+
+**提示**：首次使用建议从简单项目开始，熟悉流程后再处理复杂项目。
