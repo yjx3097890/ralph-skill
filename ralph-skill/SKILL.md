@@ -1,9 +1,9 @@
 ---
 name: ralph-skill
-version: 1.0.0
+version: 1.2.0
 author: Ralph Team
-description: 企业级自治编程引擎，支持前后端全栈自动化开发
-keywords: [autonomous, coding, fullstack, ai, automation, vue3, go, python]
+description: 企业级自治编程引擎，支持前后端全栈自动化开发（含E2E测试）
+keywords: [autonomous, coding, fullstack, ai, automation, vue3, go, python, e2e, playwright]
 category: development
 license: MIT
 ---
