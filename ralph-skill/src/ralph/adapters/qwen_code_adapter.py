@@ -56,13 +56,17 @@ result = adapter.generate_code(
 """
 
 import json
+import logging
 import os
 import re
+import subprocess
 from typing import List, Optional
 
 from ralph.adapters.ai_engine import AIEngineAdapter, CodeResult, EngineConfig
 from ralph.managers.cli_process_manager import CLIProcessManager
 from ralph.models.enums import ErrorCategory
+
+logger = logging.getLogger(__name__)
 
 
 class QwenCodeAdapter(AIEngineAdapter):
@@ -79,6 +83,9 @@ class QwenCodeAdapter(AIEngineAdapter):
         self.process_manager = CLIProcessManager()
         # 从 extra_params 获取 cli_path，如果没有则使用默认值
         self.cli_path = getattr(config, 'extra_params', {}).get("cli_path", "qwen") if hasattr(config, 'extra_params') else "qwen"
+        
+        # 添加日志确认配置
+        logger.info(f"QwenCodeAdapter 初始化: timeout={config.timeout}秒, model={config.model}")
     
     def initialize(self) -> bool:
         """
@@ -178,6 +185,7 @@ class QwenCodeAdapter(AIEngineAdapter):
         prompt: str,
         context: str = "",
         language: Optional[str] = None,
+        project_root: Optional[str] = None,
         **kwargs
     ) -> CodeResult:
         """
@@ -187,54 +195,77 @@ class QwenCodeAdapter(AIEngineAdapter):
             prompt: 代码生成提示
             context: 上下文信息
             language: 目标编程语言
+            project_root: 项目根目录
             **kwargs: 其他参数
             
         Returns:
             CodeResult: 代码生成结果
         """
         try:
-            # 构建命令
-            command = self._build_command(prompt, context, language, **kwargs)
+            # 构建完整的提示（包含上下文）
+            full_prompt = prompt
+            if context:
+                full_prompt = f"{context}\n\n{prompt}"
             
-            # 启动进程
-            process = self.process_manager.start_process(
-                command=command,
-                env=self._build_env()
+            # 构建命令：使用 -p 参数进行非交互式调用
+            command = [
+                self.cli_path,
+                "-p", full_prompt,
+                "-y"  # YOLO 模式，自动接受所有操作
+            ]
+            
+            # 如果指定了模型
+            if self.config.model:
+                command.extend(["-m", self.config.model])
+            
+            # 启动进程（在项目目录中运行）
+            import subprocess
+            import os
+            
+            cwd = project_root or os.getcwd()
+            
+            logger.info(f"在目录 {cwd} 中调用 Qwen Code...")
+            logger.info(f"超时设置: {self.config.timeout} 秒")
+            logger.info(f"提示: {prompt[:100]}...")
+            
+            process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=cwd,
+                text=True
             )
             
-            # 读取输出
-            output = self.process_manager.read_output(
-                process,
-                timeout=self.config.timeout
-            )
-            
-            # 等待进程完成
-            exit_code = self.process_manager.wait_for_completion(process)
+            # 等待完成
+            logger.info(f"等待 Qwen Code 完成（最多 {self.config.timeout} 秒）...")
+            stdout, stderr = process.communicate(timeout=self.config.timeout)
+            exit_code = process.returncode
             
             if exit_code == 0:
-                # 解析输出
-                code, explanation = self._parse_output(output)
-                
+                # Qwen Code 会直接修改文件，我们需要检测哪些文件被修改了
+                # 这里返回成功，文件变更由 Git 管理器检测
                 return CodeResult(
                     success=True,
-                    code=code,
-                    explanation=explanation,
-                    warnings=[]
+                    code="",  # Qwen Code 直接修改文件，不返回代码
+                    explanation=f"Qwen Code 执行成功\n\n输出:\n{stdout}",
+                    warnings=[],
+                    changes=[]  # 由 Git 管理器检测变更
                 )
             else:
-                # 读取错误输出
-                error_output = self.process_manager.read_output(
-                    process,
-                    stream="stderr"
-                )
-                
                 return CodeResult(
                     success=False,
                     code="",
-                    explanation=f"Qwen Code 执行失败: {error_output}",
-                    warnings=[error_output]
+                    explanation=f"Qwen Code 执行失败\n\n错误:\n{stderr}\n\n输出:\n{stdout}",
+                    warnings=[stderr]
                 )
                 
+        except subprocess.TimeoutExpired:
+            return CodeResult(
+                success=False,
+                code="",
+                explanation=f"Qwen Code 执行超时（{self.config.timeout}秒）",
+                warnings=["执行超时"]
+            )
         except Exception as e:
             return CodeResult(
                 success=False,

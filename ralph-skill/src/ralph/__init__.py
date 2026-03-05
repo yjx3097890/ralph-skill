@@ -8,7 +8,9 @@ Ralph Skill 企业级自治编程引擎
 __version__ = "1.0.0"
 __author__ = "Ralph Team"
 
-# 导出主要函数供外部调用
+# 导出主要函数和类供外部调用
 from ralph.__main__ import autonomous_develop
+from ralph.core.ralph_engine import RalphEngineCore
+from ralph.models.task import TaskConfig
 
-__all__ = ["autonomous_develop"]
+__all__ = ["autonomous_develop", "RalphEngineCore", "TaskConfig"]

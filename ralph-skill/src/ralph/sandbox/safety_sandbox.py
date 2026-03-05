@@ -345,6 +345,89 @@ class SafetySandbox:
             resource_usage=ResourceUsage(),
             security_violations=[],
         )
+    def execute_command(
+        self,
+        command: str,
+        timeout: Optional[int] = None,
+        cwd: Optional[str] = None
+    ) -> ExecutionResult:
+        """
+        在沙箱中执行命令
+
+        参数:
+            command: 要执行的命令
+            timeout: 超时时间（秒）
+            cwd: 工作目录
+
+        返回:
+            ExecutionResult: 执行结果
+        """
+        import subprocess
+        import time
+
+        if timeout is None:
+            timeout = self.config.resource_limits.max_execution_time
+
+        if cwd is None:
+            cwd = self.config.project_root
+
+        # 检查命令安全性
+        violations = self.detect_dangerous_operations(command)
+        if violations:
+            return ExecutionResult(
+                success=False,
+                exit_code=-1,
+                output=f"命令包含危险操作: {', '.join(v.message for v in violations)}",
+                execution_time=0.0,
+                security_violations=violations
+            )
+
+        start_time = time.time()
+
+        try:
+            # 执行命令
+            process = subprocess.Popen(
+                command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=cwd,
+                text=True
+            )
+
+            # 等待完成
+            try:
+                stdout, stderr = process.communicate(timeout=timeout)
+                exit_code = process.returncode
+                output = stdout if stdout else stderr
+            except subprocess.TimeoutExpired:
+                process.kill()
+                stdout, stderr = process.communicate()
+                return ExecutionResult(
+                    success=False,
+                    exit_code=-1,
+                    output=f"命令执行超时（{timeout}秒）\n{stderr}",
+                    execution_time=time.time() - start_time
+                )
+
+            execution_time = time.time() - start_time
+
+            return ExecutionResult(
+                success=exit_code == 0,
+                exit_code=exit_code,
+                output=output,
+                execution_time=execution_time
+            )
+
+        except Exception as e:
+            return ExecutionResult(
+                success=False,
+                exit_code=-1,
+                output=f"命令执行失败: {str(e)}",
+                execution_time=time.time() - start_time
+            )
+
+
     
     def check_security(self, code: str) -> List[SecurityViolation]:
         """

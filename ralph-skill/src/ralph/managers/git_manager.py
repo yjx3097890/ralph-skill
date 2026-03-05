@@ -347,6 +347,33 @@ class GitManager:
             error_msg = f"回滚到提交失败: {commit_hash}"
             logger.error(f"{error_msg} - {str(e)}")
             raise CommitOperationError(error_msg) from e
+    def rollback_to_branch(self, branch_name: str, hard: bool = True) -> None:
+        """
+        回滚到指定分支
+
+        参数:
+            branch_name: 目标分支名称
+            hard: 是否硬回滚（丢弃所有未提交的更改）
+
+        异常:
+            BranchOperationError: 分支操作失败
+        """
+        try:
+            # 检查分支是否存在
+            if branch_name not in self.list_branches():
+                raise BranchOperationError(f"分支不存在: {branch_name}")
+
+            # 切换到目标分支
+            self.checkout_branch(branch_name)
+
+            # 如果是硬回滚，重置工作目录
+            if hard:
+                self.repo.head.reset(index=True, working_tree=True)
+
+            logger.info(f"已回滚到分支: {branch_name}")
+
+        except Exception as e:
+            raise BranchOperationError(f"回滚到分支失败: {e}")
 
     def get_commit_history(self, max_count: int = 10) -> List[dict]:
         """
@@ -527,3 +554,29 @@ class GitManager:
             logger.warning("无法提取冲突文件列表")
 
         return conflicts
+
+
+    def get_diff(self, ref1: str = "HEAD", ref2: Optional[str] = None) -> str:
+        """
+        获取代码差异
+
+        参数:
+            ref1: 第一个引用（默认为 HEAD）
+            ref2: 第二个引用（可选，如果为 None 则显示工作区差异）
+
+        返回:
+            str: Git diff 输出
+        """
+        try:
+            if ref2:
+                # 比较两个引用
+                diff = self.repo.git.diff(ref1, ref2)
+            else:
+                # 显示工作区差异
+                diff = self.repo.git.diff(ref1)
+
+            return diff
+        except Exception as e:
+            logger.error(f"获取代码差异失败: {e}")
+            return ""
+

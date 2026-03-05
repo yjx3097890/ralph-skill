@@ -99,7 +99,8 @@ class TaskResult:
     message: str = ""
     output: str = ""
     errors: List[str] = field(default_factory=list)
-    git_commits: List[str] = field(default_factory=list)
+    files_changed: List[str] = field(default_factory=list)
+    commit_hash: Optional[str] = None
     tests_passed: bool = False
     test_output: Optional[str] = None
 
