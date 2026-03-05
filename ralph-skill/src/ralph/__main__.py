@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from ralph.core.config_parser import ConfigParser
-from ralph.core.ralph_engine import RalphEngine
+from ralph.core.ralph_engine import RalphEngineCore
 from ralph.managers.task_planner import TaskPlanner
 from ralph.models.config import ProjectConfig, EngineConfig
 
@@ -54,7 +54,7 @@ def autonomous_develop(
         config = parser.parse_config(str(config_path))
         
         # 创建引擎并执行
-        engine = RalphEngine(config, project_root=str(project_path))
+        engine = RalphEngineCore(config, project_root=str(project_path))
         results = engine.run_all_tasks()
         
         success_count = sum(1 for r in results.values() if r.success)
@@ -87,7 +87,7 @@ def autonomous_develop(
     print(f"📋 任务数量: {len(config.tasks)}")
     
     # 创建引擎并执行
-    engine = RalphEngine(config, project_root=str(project_path))
+    engine = RalphEngineCore(config, project_root=str(project_path))
     results = engine.run_all_tasks()
     
     success_count = sum(1 for r in results.values() if r.success)

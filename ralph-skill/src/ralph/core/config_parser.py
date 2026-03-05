@@ -297,6 +297,33 @@ class ConfigParser:
         验证需求 9.5: 配置文件热重载
         """
         return self.parse_config(config_path)
+    def save_config(self, config: Configuration, config_path: str) -> None:
+        """
+        保存配置到 YAML 文件
+
+        参数:
+            config: 配置对象
+            config_path: 配置文件路径
+        """
+        import yaml
+        from pathlib import Path
+
+        # 转换为字典
+        config_dict = self._config_to_dict(config)
+
+        # 确保目录存在
+        Path(config_path).parent.mkdir(parents=True, exist_ok=True)
+
+        # 写入文件
+        with open(config_path, 'w', encoding='utf-8') as f:
+            yaml.dump(
+                config_dict,
+                f,
+                default_flow_style=False,
+                allow_unicode=True,
+                sort_keys=False
+            )
+
         
     def enable_hot_reload(
         self,

@@ -19,7 +19,7 @@ Qwen Code 引擎的具体实现，通过 qwen CLI 工具进行代码生成和修
 curl -fsSL https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.sh | bash
 
 # Windows (以管理员身份运行 CMD)
-curl -fsSL -o %TEMP%\install-qwen.bat https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.bat && %TEMP%\install-qwen.bat
+curl -fsSL -o %TEMP%\\install-qwen.bat https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.bat && %TEMP%\\install-qwen.bat
 
 # 或使用 npm 安装（需要 Node.js 20+）
 npm install -g @qwen-code/qwen-code@latest
