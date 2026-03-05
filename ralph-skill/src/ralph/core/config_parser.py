@@ -536,6 +536,10 @@ class ConfigParser:
         
     def _parse_engine_config(self, data: Dict[str, Any]) -> EngineConfig:
         """解析 AI 引擎配置"""
+        # 提取 extra_params（除了标准字段外的所有字段）
+        standard_fields = {'type', 'model', 'timeout', 'api_key', 'api_base', 'temperature', 'max_tokens'}
+        extra_params = {k: v for k, v in data.items() if k not in standard_fields}
+        
         return EngineConfig(
             type=EngineType(data.get("type", "qwen_code")),
             model=data.get("model"),
@@ -543,7 +547,8 @@ class ConfigParser:
             api_key=data.get("api_key"),
             api_base=data.get("api_base"),
             temperature=data.get("temperature", 0.7),
-            max_tokens=data.get("max_tokens", 4096)
+            max_tokens=data.get("max_tokens", 4096),
+            extra_params=extra_params
         )
         
     def _config_to_dict(self, config: Configuration) -> Dict[str, Any]:

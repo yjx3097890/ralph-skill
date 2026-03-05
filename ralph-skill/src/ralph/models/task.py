@@ -96,7 +96,8 @@ class TaskResult:
     task_id: str
     success: bool
     execution_time: float
-    output: str
+    message: str = ""
+    output: str = ""
     errors: List[str] = field(default_factory=list)
     git_commits: List[str] = field(default_factory=list)
     tests_passed: bool = False

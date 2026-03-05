@@ -64,9 +64,23 @@ class RalphEngineCore:
         self.git_manager = GitManager(str(self.project_root))
         self.context_manager = ContextManager()
         self.hook_system = HookSystem()
+        
+        # 初始化 AI 引擎管理器
         self.ai_engine_manager = AIEngineManager(
             EngineType.QWEN_CODE, [EngineType.AIDER]
         )
+        
+        # 从配置中注册 AI 引擎
+        if self.config.ai_engines:
+            for engine_name, engine_config in self.config.ai_engines.items():
+                try:
+                    self.ai_engine_manager.register_engine(
+                        engine_config.type, engine_config
+                    )
+                    logger.info(f"已注册 AI 引擎: {engine_name} ({engine_config.type.value})")
+                except Exception as e:
+                    logger.warning(f"注册 AI 引擎 {engine_name} 失败: {e}")
+        
         self.sandbox = SafetySandbox(
             SandboxConfig(project_root=str(self.project_root))
         )
@@ -112,7 +126,7 @@ class RalphEngineCore:
                     
                     # 1. 调用 AI 引擎生成代码
                     code_result = self._execute_with_ai(task_config)
-                    files_changed = code_result.files_changed or []
+                    files_changed = code_result.changes or []
                     
                     # 2. 运行测试验证
                     test_passed = self._run_tests(task_config)
@@ -210,11 +224,11 @@ class RalphEngineCore:
         logger.info(f"调用 AI 引擎生成代码...")
         result = self.ai_engine_manager.generate_code(
             prompt=description,
-            context=context.content,
+            context=context,
             project_root=str(self.project_root),
         )
         
-        logger.info(f"代码生成完成，修改了 {len(result.files_changed or [])} 个文件")
+        logger.info(f"代码生成完成，修改了 {len(result.changes or [])} 个文件")
         return result
     
     def _run_tests(self, task_config: TaskConfig) -> bool:

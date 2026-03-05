@@ -104,7 +104,7 @@ class AIEngineAdapter(ABC):
         """
         self.config = config
         self.status = EngineStatus(
-            engine_type=config.engine_type,
+            engine_type=config.type,
             is_available=False
         )
     

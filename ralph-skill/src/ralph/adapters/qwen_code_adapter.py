@@ -77,7 +77,8 @@ class QwenCodeAdapter(AIEngineAdapter):
         """
         super().__init__(config)
         self.process_manager = CLIProcessManager()
-        self.cli_path = config.extra_params.get("cli_path", "qwen")
+        # 从 extra_params 获取 cli_path，如果没有则使用默认值
+        self.cli_path = getattr(config, 'extra_params', {}).get("cli_path", "qwen") if hasattr(config, 'extra_params') else "qwen"
     
     def initialize(self) -> bool:
         """
@@ -156,8 +157,8 @@ class QwenCodeAdapter(AIEngineAdapter):
         command = [self.cli_path]
         
         # 添加模型参数
-        if self.config.model_name:
-            command.extend(["--model", self.config.model_name])
+        if self.config.model:
+            command.extend(["--model", self.config.model])
         
         # 添加语言参数
         if language:

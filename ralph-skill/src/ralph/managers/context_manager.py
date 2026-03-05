@@ -214,6 +214,61 @@ class ContextManager:
             str: 管理后的上下文文本
         """
         return self.truncate_output(context)
+    def build_context(
+        self,
+        project_root: str,
+        task_description: str,
+        relevant_files: Optional[List[str]] = None
+    ) -> str:
+        """
+        构建任务上下文
+
+        参数:
+            project_root: 项目根目录
+            task_description: 任务描述
+            relevant_files: 相关文件列表（可选）
+
+        返回:
+            str: 构建的上下文字符串
+        """
+        from pathlib import Path
+
+        context_parts = []
+
+        # 添加任务描述
+        context_parts.append(f"# 任务描述\n\n{task_description}\n")
+
+        # 添加项目结构
+        context_parts.append("\n# 项目结构\n")
+        project_path = Path(project_root)
+        if project_path.exists():
+            # 列出主要目录
+            for item in project_path.iterdir():
+                if item.name.startswith('.'):
+                    continue
+                if item.is_dir():
+                    context_parts.append(f"- {item.name}/\n")
+                else:
+                    context_parts.append(f"- {item.name}\n")
+
+        # 添加相关文件内容
+        if relevant_files:
+            context_parts.append("\n# 相关文件\n")
+            for file_path in relevant_files:
+                full_path = project_path / file_path
+                if full_path.exists() and full_path.is_file():
+                    try:
+                        content = full_path.read_text(encoding='utf-8')
+                        context_parts.append(f"\n## {file_path}\n\n```\n{content}\n```\n")
+                    except Exception as e:
+                        context_parts.append(f"\n## {file_path}\n\n无法读取文件: {e}\n")
+
+        # 合并上下文
+        full_context = "".join(context_parts)
+
+        # 管理上下文大小
+        return self.manage_context_size(full_context)
+
         
     def _create_truncation_marker(
         self,

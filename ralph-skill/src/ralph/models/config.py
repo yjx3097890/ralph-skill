@@ -97,6 +97,7 @@ class EngineConfig:
     temperature: float = 0.7
     max_tokens: int = 4096
     timeout: int = 60
+    extra_params: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
