@@ -247,55 +247,79 @@ class RalphEngineCore:
         return result
     
     def _run_tests(self, task_config: TaskConfig) -> tuple[bool, str]:
-        """
-        运行测试验证代码
-        
-        参数:
-            task_config: 任务配置
-        
-        返回:
-            tuple[bool, str]: (测试是否通过, 详细的测试输出)
-        """
-        logger.info("运行测试验证...")
-        
-        # 对于初始化任务，跳过测试（因为项目还没有完全初始化）
-        if "init" in task_config.id.lower() or "初始化" in task_config.name:
-            logger.info("初始化任务，跳过测试验证")
-            return True, "初始化任务，跳过测试"
-        
-        try:
-            # 在沙箱中运行测试
-            test_command = self._get_test_command()
-            if not test_command:
-                logger.warning("未配置测试命令，跳过测试")
-                return True, "未配置测试命令"
-            
-            # 检查项目是否已初始化
-            if not self._is_project_initialized():
-                logger.warning("项目尚未初始化，跳过测试")
-                return True, "项目尚未初始化"
-            
-            # 检查并启动必要的服务（如数据库）
-            self._ensure_services_running()
-            
-            logger.info(f"执行测试命令: {test_command}")
-            result = self.sandbox.execute_command(
-                test_command,
-                timeout=task_config.timeout,
-            )
-            
-            if result.exit_code == 0:
-                logger.info("✅ 测试通过")
-                return True, result.output
-            else:
-                logger.error(f"❌ 测试失败 (退出码: {result.exit_code})")
-                logger.error(f"测试输出:\n{result.output}")
-                return False, result.output
-                
-        except Exception as e:
-            error_msg = f"运行测试时出错: {str(e)}"
-            logger.error(error_msg, exc_info=True)
-            return False, error_msg
+            """
+            运行测试验证代码（包括单元测试和 E2E 测试）
+
+            参数:
+                task_config: 任务配置
+
+            返回:
+                tuple[bool, str]: (测试是否通过, 详细的测试输出)
+            """
+            logger.info("运行测试验证...")
+
+            # 对于初始化任务，跳过测试（因为项目还没有完全初始化）
+            if "init" in task_config.id.lower() or "初始化" in task_config.name:
+                logger.info("初始化任务，跳过测试验证")
+                return True, "初始化任务，跳过测试"
+
+            try:
+                # 检查项目是否已初始化
+                if not self._is_project_initialized():
+                    logger.warning("项目尚未初始化，跳过测试")
+                    return True, "项目尚未初始化"
+
+                # 检查并启动必要的服务（如数据库）
+                self._ensure_services_running()
+
+                # 获取所有测试命令（单元测试 + E2E 测试）
+                test_commands = self._get_test_commands()
+                if not test_commands:
+                    logger.warning("未配置测试命令，跳过测试")
+                    return True, "未配置测试命令"
+
+                all_outputs = []
+                all_passed = True
+
+                # 依次执行所有测试
+                for test_type, test_command in test_commands.items():
+                    logger.info(f"\n{'='*50}")
+                    logger.info(f"执行 {test_type} 测试")
+                    logger.info(f"命令: {test_command}")
+                    logger.info(f"{'='*50}\n")
+
+                    result = self.sandbox.execute_command(
+                        test_command,
+                        timeout=task_config.timeout,
+                    )
+
+                    output_header = f"\n{'='*50}\n{test_type} 测试结果\n{'='*50}\n"
+                    all_outputs.append(output_header + result.output)
+
+                    if result.exit_code == 0:
+                        logger.info(f"✅ {test_type} 测试通过")
+                    else:
+                        logger.error(f"❌ {test_type} 测试失败 (退出码: {result.exit_code})")
+                        logger.error(f"测试输出:\n{result.output}")
+                        all_passed = False
+                        # 如果单元测试失败，不再执行 E2E 测试
+                        if test_type == "单元测试":
+                            logger.warning("单元测试失败，跳过 E2E 测试")
+                            break
+
+                combined_output = "\n".join(all_outputs)
+
+                if all_passed:
+                    logger.info("✅ 所有测试通过")
+                    return True, combined_output
+                else:
+                    logger.error("❌ 测试失败")
+                    return False, combined_output
+
+            except Exception as e:
+                error_msg = f"运行测试时出错: {str(e)}"
+                logger.error(error_msg, exc_info=True)
+                return False, error_msg
     
     def _ensure_services_running(self) -> None:
         """
@@ -506,22 +530,121 @@ class RalphEngineCore:
         except Exception as e:
             logger.warning(f"启动 Redis 容器失败: {e}")
     
-    def _get_test_command(self) -> Optional[str]:
-        """获取测试命令"""
-        # 根据项目类型返回测试命令
-        if self.config.project.backend:
-            language = self.config.project.backend.language
-            if language == "go":
-                return "go test ./..."
-            elif language == "python":
-                return "pytest"
-            elif language == "node":
-                return "npm test"
-        
-        if self.config.project.frontend:
-            return "npm test"
-        
-        return None
+    def _get_test_commands(self) -> Dict[str, str]:
+            """
+            获取所有测试命令（单元测试 + E2E 测试）
+
+            返回:
+                Dict[str, str]: 测试类型到命令的映射，例如 {"单元测试": "npm test", "E2E测试": "npm run test:e2e"}
+            """
+            commands = {}
+
+            # 后端单元测试
+            if self.config.project.backend:
+                language = self.config.project.backend.language
+                if language == "go":
+                    # 检查是否在 backend 子目录
+                    backend_dir = self.project_root / "backend"
+                    if backend_dir.exists() and (backend_dir / "go.mod").exists():
+                        commands["单元测试"] = "cd backend && go test ./..."
+                    else:
+                        commands["单元测试"] = "go test ./..."
+                elif language == "python":
+                    backend_dir = self.project_root / "backend"
+                    if backend_dir.exists():
+                        commands["单元测试"] = "cd backend && pytest"
+                    else:
+                        commands["单元测试"] = "pytest"
+                elif language == "node":
+                    backend_dir = self.project_root / "backend"
+                    if backend_dir.exists():
+                        commands["单元测试"] = "cd backend && npm test"
+                    else:
+                        commands["单元测试"] = "npm test"
+
+            # 前端单元测试和 E2E 测试
+            if self.config.project.frontend:
+                frontend_dir = self.project_root / "frontend"
+
+                # 检查前端目录是否存在
+                if frontend_dir.exists():
+                    package_json = frontend_dir / "package.json"
+
+                    # 如果后端没有配置单元测试，添加前端单元测试
+                    if "单元测试" not in commands:
+                        commands["单元测试"] = "cd frontend && npm test"
+
+                    # 检查是否配置了 E2E 测试
+                    if self.config.project.frontend.e2e_runner:
+                        e2e_runner = self.config.project.frontend.e2e_runner.value
+
+                        # 检查 package.json 中是否有 E2E 测试脚本
+                        if package_json.exists():
+                            try:
+                                import json
+                                with open(package_json, 'r') as f:
+                                    pkg_data = json.load(f)
+                                    scripts = pkg_data.get("scripts", {})
+
+                                    # 查找 E2E 测试脚本
+                                    if "test:e2e" in scripts:
+                                        commands["E2E测试"] = "cd frontend && npm run test:e2e"
+                                    elif "e2e" in scripts:
+                                        commands["E2E测试"] = "cd frontend && npm run e2e"
+                                    elif e2e_runner == "playwright":
+                                        # 使用默认的 Playwright 命令
+                                        commands["E2E测试"] = "cd frontend && npx playwright test"
+                                    elif e2e_runner == "cypress":
+                                        commands["E2E测试"] = "cd frontend && npx cypress run"
+                            except Exception as e:
+                                logger.warning(f"解析 package.json 失败: {e}")
+                                # 使用默认命令
+                                if e2e_runner == "playwright":
+                                    commands["E2E测试"] = "cd frontend && npx playwright test"
+                                elif e2e_runner == "cypress":
+                                    commands["E2E测试"] = "cd frontend && npx cypress run"
+                else:
+                    # 前端在根目录
+                    if "单元测试" not in commands:
+                        commands["单元测试"] = "npm test"
+
+                    if self.config.project.frontend.e2e_runner:
+                        e2e_runner = self.config.project.frontend.e2e_runner.value
+                        package_json = self.project_root / "package.json"
+
+                        if package_json.exists():
+                            try:
+                                import json
+                                with open(package_json, 'r') as f:
+                                    pkg_data = json.load(f)
+                                    scripts = pkg_data.get("scripts", {})
+
+                                    if "test:e2e" in scripts:
+                                        commands["E2E测试"] = "npm run test:e2e"
+                                    elif "e2e" in scripts:
+                                        commands["E2E测试"] = "npm run e2e"
+                                    elif e2e_runner == "playwright":
+                                        commands["E2E测试"] = "npx playwright test"
+                                    elif e2e_runner == "cypress":
+                                        commands["E2E测试"] = "npx cypress run"
+                            except Exception as e:
+                                logger.warning(f"解析 package.json 失败: {e}")
+                                if e2e_runner == "playwright":
+                                    commands["E2E测试"] = "npx playwright test"
+                                elif e2e_runner == "cypress":
+                                    commands["E2E测试"] = "npx cypress run"
+
+            return commands
+
+        def _get_test_command(self) -> Optional[str]:
+            """
+            获取测试命令（保留用于向后兼容）
+
+            返回:
+                Optional[str]: 单元测试命令
+            """
+            commands = self._get_test_commands()
+            return commands.get("单元测试")
     
     def _is_project_initialized(self) -> bool:
         """

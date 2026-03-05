@@ -162,7 +162,28 @@ poetry run python -m ralph develop "创建一个 Todo 应用" \
 
 ## 核心能力
 
-### 1. Agent 驱动的智能执行（新特性）
+### 1. 端对端测试支持（v1.2.0 新增）
+
+Ralph Skill 完全支持端对端（E2E）测试，可以自动检测和执行 Playwright 或 Cypress 测试。
+
+**配置示例**：
+```yaml
+project:
+  frontend:
+    framework: vue3
+    test_runner: vitest
+    e2e_runner: playwright  # 启用 E2E 测试
+```
+
+**测试执行顺序**：
+1. 单元测试（后端 + 前端）
+2. E2E 测试（单元测试通过后执行）
+
+**智能跳过**：如果单元测试失败，会自动跳过 E2E 测试，节省时间。
+
+**详细文档**：查看 [端对端测试支持文档](./docs/e2e_testing_support.md)
+
+### 2. Agent 驱动的智能执行
 
 Ralph Skill 采用 **Agent 驱动** 的执行模式，不再盲目重试：
 
